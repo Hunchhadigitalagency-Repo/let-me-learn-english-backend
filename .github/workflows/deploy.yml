@@ -37,6 +37,11 @@ jobs:
             # Pull latest code
             git pull origin main
 
+            # Stop existing containers
+            echo "🛑 Stopping existing containers..."
+            make down || true
+
+
             # Rebuild and start containers using Makefile
             make up-build
 
