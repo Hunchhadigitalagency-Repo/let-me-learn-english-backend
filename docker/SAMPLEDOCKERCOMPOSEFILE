@@ -4,11 +4,10 @@ services:
   web:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: docker/Dockerfile
     restart: always
     ports:
       - "8002:8002"   
-    command: ["sh", "./entrypoint.sh"]
     volumes:
       - ./:/app
       - ./staticfile:/app/staticfile

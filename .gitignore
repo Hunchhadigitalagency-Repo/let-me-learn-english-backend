@@ -139,7 +139,7 @@ secrets.yml
 ######################################
 # CI / CD
 ######################################
-# .github/
+.github/
 .gitlab/
 .circleci/
 .vscode-test/
