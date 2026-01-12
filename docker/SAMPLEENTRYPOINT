@@ -31,7 +31,7 @@ wait_for_db() {
 }
 
 # Function call to wait for PostgreSQL database
-wait_for_db "$SQL_HOST" "$SQL_PORT"
+wait_for_db "$DB_HOST" "$DB_PORT"
 
 # Source environment variables from the .env file
 if [ -f .env ]; then
@@ -49,8 +49,8 @@ python manage.py collectstatic --noinput
 
 # Start Gunicorn server
 echo "Starting Gunicorn server.."
-exec gunicorn project.wsgi:application \
-    --bind 0.0.0.0:8002 \
-    --reload
+exec gunicorn let_me_learn_eng.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --reload \
     --workers 3 \
     --log-level=info
