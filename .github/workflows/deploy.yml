@@ -1,0 +1,53 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Install SSH client
+      - name: Install SSH Client
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+      # 3️⃣ Run commands on your DigitalOcean server
+      - name: Deploy using Makefile
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASSWORD }}
+          port: 22
+          script: |
+            set -e
+
+            echo "🚀 Deploying backend via Makefile..."
+
+            # Navigate to your project root
+            cd /mnt/volume_blr1_04/project/let-me-learn-english/backend/let-me-learn-english-backend
+
+            # Pull latest code
+            git pull origin main
+
+            # Rebuild and start containers using Makefile
+            make up-build
+
+            # Cleanup unused images, containers, networks, volumes safely
+            docker image prune -a -f
+            docker network prune -f
+            docker system prune -f --volumes
+
+            # Show running containers and disk usage
+            echo "✅ Currently running containers:"
+            docker ps
+
+            echo "✅ Docker system disk usage:"
+            docker system df
