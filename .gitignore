@@ -1,0 +1,177 @@
+######################################
+# PYTHON
+######################################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.python-version
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+.env/
+.env.*
+
+# Poetry / Pipenv
+poetry.lock
+Pipfile.lock
+
+######################################
+# DJANGO
+######################################
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media & static
+/media/
+/staticfiles/
+/static/
+
+# Django migrations (optional)
+**/migrations/*.py
+!**/migrations/__init__.py
+
+######################################
+# DJANGO REST FRAMEWORK
+######################################
+drf_yasg/
+swagger/
+openapi.json
+openapi.yaml
+
+######################################
+# DATABASES
+######################################
+*.sqlite3
+*.db
+*.psql
+*.dump
+*.sql
+
+######################################
+# DOCKER
+####################################
+docker-compose.yml
+Dockerfile
+entrypoint.sh
+docker-compose.override.yml
+*.dockerfile
+.docker/
+
+
+######################################
+# TESTING / COVERAGE
+######################################
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+######################################
+# CACHE / TEMP
+######################################
+.cache/
+.tmp/
+temp/
+tmp/
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+######################################
+# IDEs & EDITORS
+######################################
+# VS Code
+.vscode/
+.history/
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+######################################
+# OS FILES
+######################################
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+######################################
+# ENV / SECRETS
+######################################
+.env
+.env.local
+.env.dev
+.env.prod
+.env.staging
+secrets.yml
+*.pem
+*.key
+*.crt
+
+######################################
+# CI / CD
+######################################
+.github/
+.gitlab/
+.circleci/
+.vscode-test/
+
+######################################
+# LOGS
+######################################
+logs/
+*.log
+gunicorn.log
+celery.log
+
+######################################
+# CELERY / REDIS
+######################################
+celerybeat-schedule
+celerybeat.pid
+redis-data/
+
+######################################
+# AWS / CLOUD
+######################################
+.aws/
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars
+
+######################################
+# MISC
+######################################
+*.pid
+*.seed
+*.old
+*.backup

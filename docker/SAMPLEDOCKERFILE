@@ -1,0 +1,55 @@
+# -------------------------
+# BUILDER
+# -------------------------
+FROM python:3.11-slim AS builder
+
+# Environment
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install build tools for compiling dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install into a prefix
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# -------------------------
+# RUNTIME
+# -------------------------
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Copy installed packages from builder stage
+COPY --from=builder /install /usr/local
+
+# Copy application code
+# ... (rest of the file above)
+
+# Copy application code
+COPY . /app
+
+# Expose port
+EXPOSE 8000
+
+# 1. Correct the path to the docker folder
+RUN chmod +x /docker/entrypoint.sh
+# 2. Use the exact path where the file exists
+ENTRYPOINT ["/docker/entrypoint.sh"]
+
+# Default server command
+CMD ["gunicorn", "let_me_learn_eng.wsgi:application", "--bind", "0.0.0.0:8002"]

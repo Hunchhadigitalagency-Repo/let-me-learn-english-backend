@@ -1,0 +1,24 @@
+
+
+#database settings
+DB_NAME=lmle
+DB_USER=lmle_user
+DB_PASSWORD=lmle@2026
+DB_HOST=postgres_db
+DB_PORT=5432
+
+
+#django settings
+SECRET_KEY="django-insecure-e+_wy^a4^a)en6vw5+h4kzip6z&is0c1_3)bg(o3#!r)#*wva7"
+DEBUG=True
+BASE_URL=http://localhost:8000
+
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://myfrontend.com
+
+# CSRF
+CSRF_TRUSTED_ORIGINS=http://localhost:3000,https://myfrontend.com
+CSRF_COOKIE_SECURE=False
+SESSION_COOKIE_SECURE=False

@@ -1,0 +1,183 @@
+######################################
+# GIT
+######################################
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+######################################
+# PYTHON
+######################################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+*.egg-info/
+.eggs/
+.Python
+.python-version
+
+######################################
+# VIRTUAL ENVIRONMENTS
+######################################
+env/
+venv/
+ENV/
+.venv/
+.virtualenv/
+
+######################################
+# ENV / SECRETS
+######################################
+.env
+.env.*
+*.env
+secrets.yml
+*.pem
+*.key
+*.crt
+*.pfx
+
+######################################
+# DJANGO
+######################################
+*.log
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+
+# Static & media (should be generated in container)
+static/
+staticfiles/
+media/
+
+######################################
+# MIGRATIONS (optional – usually keep them)
+######################################
+# **/migrations/*.py
+# !**/migrations/__init__.py
+
+######################################
+# DOCKER
+######################################
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+Dockerfile.*
+.docker/
+.dockerignore
+
+######################################
+# NODE / FRONTEND (if monorepo)
+######################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+dist/
+build/
+.cache/
+.next/
+.nuxt/
+
+######################################
+# TESTING / COVERAGE
+######################################
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+######################################
+# CACHE / TEMP FILES
+######################################
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+######################################
+# IDEs & EDITORS
+######################################
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+.history/
+
+######################################
+# OS FILES
+######################################
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+######################################
+# LOGS
+######################################
+logs/
+*.log
+gunicorn.log
+celery.log
+
+######################################
+# CELERY / REDIS
+######################################
+celerybeat-schedule
+celerybeat.pid
+redis-data/
+
+######################################
+# CLOUD / DEVOPS
+######################################
+.aws/
+.gcloud/
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+ansible/
+packer/
+
+######################################
+# DOCUMENTATION / MISC
+######################################
+*.md
+docs/
+README*
+CHANGELOG*
+LICENSE*
+
+######################################
+# BACKUPS
+######################################
+*.backup
+*.old
+*.bak
+*.dump
+*.sql

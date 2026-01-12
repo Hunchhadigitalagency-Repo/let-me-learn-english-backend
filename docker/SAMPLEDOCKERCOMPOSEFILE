@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "8002:8002"   
+    command: ["sh", "./entrypoint.sh"]
+    volumes:
+      - ./:/app
+      - ./staticfile:/app/staticfile
+      - ./media:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - postgres_db
+    networks:
+      - my_network
+
+  postgres_db:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - my_network
+
+volumes:
+  postgres_data:
+
+networks:
+  my_network:
+    driver: bridge

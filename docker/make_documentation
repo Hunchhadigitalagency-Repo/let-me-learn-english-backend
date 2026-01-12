@@ -1,0 +1,29 @@
+# Build images first
+make build
+
+# Start containers in background
+make up
+
+# Rebuild images and start containers (if needed)
+make up-build
+
+# Apply database migrations
+make migrate
+
+# Create Django superuser
+make createsuperuser
+
+# Collect static files
+make collectstatic
+
+# Follow container logs
+make logs
+
+# Open shell inside web container
+make shell
+
+# Stop and remove all containers
+make down
+
+# Restart containers
+make restart
