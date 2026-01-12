@@ -28,7 +28,9 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# settings.py
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ALLOWED_HOSTS = ['lmleapi.hunchhadigital.com.np', 'localhost', '127.0.0.1']
 
 # Application definition
 
