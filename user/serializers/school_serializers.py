@@ -1,0 +1,219 @@
+from rest_framework import serializers
+from user.models import School
+from rest_framework import serializers
+from django.db import transaction
+from user.models import User,UserProfile,School
+from utils.urlsfixer import build_https_url
+class SchoolRegistrationSerializer(serializers.ModelSerializer):
+    
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+   
+    school_name = serializers.CharField(source='name',required=False)
+
+    class Meta:
+        model = School
+        fields = ['email', 'password', 'school_name', 'establish_date']
+
+    def create(self, validated_data):
+        with transaction.atomic():
+          
+            user = User.objects.create_user(
+                email=validated_data['email'],
+                password=validated_data['password'],
+                username=validated_data['email'] 
+            )
+            
+            UserProfile.objects.create(user=user, user_type='school')
+            
+          
+            
+                
+            
+            return user
+        
+        
+from rest_framework import serializers
+from django.db import transaction
+from user.models import School, User, UserProfile, Country, Province, District, FocalPerson
+
+
+class FocalPersonSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(required=True)
+    designation = serializers.CharField(required=True)
+
+class SchoolCreateSerializer(serializers.ModelSerializer):
+   
+    country_id = serializers.IntegerField(write_only=True, required=False)
+    province_id = serializers.IntegerField(write_only=True, required=False)
+    district_id = serializers.IntegerField(write_only=True, required=False)
+
+   
+    focal_name = serializers.CharField(write_only=True, required=True)
+    focal_email = serializers.EmailField(write_only=True, required=True)
+    focal_phone = serializers.CharField(write_only=True, required=True)
+    focal_designation = serializers.CharField(write_only=True, required=True)
+
+   
+    logo_url = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+    focal_person = serializers.SerializerMethodField()
+
+    class Meta:
+        model = School
+        fields = [
+            'id',
+            'name',
+            'establish_date',
+            'landline',
+            'email',
+            'city',
+            'address',
+            'logo',
+            'logo_url',
+            'country_id',
+            'province_id',
+            'district_id',
+            'country',
+            'province',
+            'district',
+            'focal_name',
+            'focal_email',
+            'focal_phone',
+            'focal_designation',
+            'focal_person',
+        ]
+        extra_kwargs = {'logo': {'write_only': True}}
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
+
+        focal_data = {
+            'name': validated_data.pop('focal_name'),
+            'email': validated_data.pop('focal_email'),
+            'phone': validated_data.pop('focal_phone'),
+            'designation': validated_data.pop('focal_designation')
+        }
+
+        with transaction.atomic():
+            
+            country = Country.objects.get(id=validated_data.pop('country_id')) if validated_data.get('country_id') else None
+            province = Province.objects.get(id=validated_data.pop('province_id')) if validated_data.get('province_id') else None
+            district = District.objects.get(id=validated_data.pop('district_id')) if validated_data.get('district_id') else None
+
+            
+            school = School.objects.create(
+                user=user,
+                country=country,
+                province=province,
+                district=district,
+                **validated_data
+            )
+
+            # Create focal person
+            FocalPerson.objects.create(
+                school=school,
+                **focal_data
+            )
+
+        return school
+
+    # ------------------ Output fields ------------------
+    def get_logo_url(self, obj):
+        request = self.context.get('request')
+        if obj.logo:
+            return build_https_url(request, obj.logo.url)
+        return None
+
+    def get_country(self, obj):
+        return obj.country.name if obj.country else None
+
+    def get_province(self, obj):
+        return obj.province.name if obj.province else None
+
+    def get_district(self, obj):
+        return obj.district.name if obj.district else None
+
+    def get_focal_person(self, obj):
+        focal = FocalPerson.objects.filter(school=obj).first()
+        if focal:
+            return {
+                'name': focal.name,
+                'email': focal.email,
+                'phone': focal.phone,
+                'designation': focal.designation
+            }
+        return None
+class SchoolUpdateSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+
+    # Focal person fields (write-only for updates)
+    focal_name = serializers.CharField(write_only=True, required=False)
+    focal_email = serializers.EmailField(write_only=True, required=False)
+    focal_phone = serializers.CharField(write_only=True, required=False)
+    focal_designation = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = School
+        fields = [
+            'name',
+            'establish_date',
+            'landline',
+            'email',
+            'country',
+            'province',
+            'district',
+            'city',
+            'address',
+            'logo',
+            'logo_url',
+            'focal_name',
+            'focal_email',
+            'focal_phone',
+            'focal_designation'
+        ]
+        extra_kwargs = {
+            'logo': {'write_only': True}  
+        }
+
+    def update(self, instance, validated_data):
+       
+        for attr, value in validated_data.items():
+            if attr not in ['focal_name', 'focal_email', 'focal_phone', 'focal_designation']:
+                setattr(instance, attr, value)
+        instance.save()
+
+      
+        focal = FocalPerson.objects.filter(school=instance).first()
+        if focal:
+            focal.name = validated_data.get('focal_name', focal.name)
+            focal.email = validated_data.get('focal_email', focal.email)
+            focal.phone = validated_data.get('focal_phone', focal.phone)
+            focal.designation = validated_data.get('focal_designation', focal.designation)
+            focal.save()
+
+        return instance
+
+   
+    def get_logo_url(self, obj):
+        request = self.context.get('request')
+        if obj.logo:
+            return build_https_url(request, obj.logo.url)  
+        return None
+
+    def get_country(self, obj):
+        return obj.country.name if obj.country else None
+
+    def get_province(self, obj):
+        return obj.province.name if obj.province else None
+
+    def get_district(self, obj):
+        return obj.district.name if obj.district else None

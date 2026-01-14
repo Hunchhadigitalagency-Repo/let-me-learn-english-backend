@@ -13,3 +13,10 @@ python-dotenv==1.0.0
 requests==2.32.0
 sqlparse==0.5.5
 urllib3==2.6.3
+
+Pillow
+djangorestframework-simplejwt==5.3.1
+django-allauth
+google-auth
+drf-yasg
+python-jose
