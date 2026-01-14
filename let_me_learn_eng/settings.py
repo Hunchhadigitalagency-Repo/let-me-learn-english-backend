@@ -91,7 +91,7 @@ CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "True") == "True"
 # OR allow specific origins (recommended for production)
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
-# Allow credentials (cookies, session auth)
+# Allow credentials (cookies, session auths)
 CORS_ALLOW_CREDENTIALS = True
 
 
