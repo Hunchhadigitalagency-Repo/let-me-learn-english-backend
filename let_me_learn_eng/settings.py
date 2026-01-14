@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     
     
     'user',
-    'task',
+    
+    'tasks'
 
 ]
 
