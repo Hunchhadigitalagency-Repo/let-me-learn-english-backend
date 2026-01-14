@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import uuid
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from django.utils.text import slugify
 
 USER_TYPE_CHOICES = (
