@@ -46,7 +46,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
-from utils.pagniator import CustomPageNumberPagination
+from utils.paginator import CustomPageNumberPagination
 
 from rest_framework_simplejwt.tokens import AccessToken, TokenError
 from django.shortcuts import redirect
