@@ -50,10 +50,11 @@ from utils.paginator import CustomPageNumberPagination
 
 from rest_framework_simplejwt.tokens import AccessToken, TokenError
 from django.shortcuts import redirect
-
+from django_q.tasks import async_task
 from django.urls import reverse
 from django.conf import settings
-
+from user.models import ResetPassword
+from user.tasks import send_verification_email
 
 # class GoogleLoginView(APIView):
 #     @swagger_auto_schema(
@@ -285,145 +286,145 @@ class LoginView(APIView):
             status=status.HTTP_200_OK
         )
 
-# class ForgotPasswordView(APIView):
-#     @swagger_auto_schema(
-#         operation_description="Endpoint for forgot password",
-#         request_body=openapi.Schema(
-#             type=openapi.TYPE_OBJECT,
-#             required=['email'],
-#             properties={
-#                 'email': openapi.Schema(
-#                     type=openapi.TYPE_STRING, 
-#                     format='email',
-#                     description='Registered email address'
-#                 )
-#             }
-#         ),
-#         responses={
-#             200: openapi.Response(
-#                 description="Password reset email sent",
-#                 schema=openapi.Schema(
-#                     type=openapi.TYPE_OBJECT,
-#                     properties={
-#                         'message': openapi.Schema(
-#                             type=openapi.TYPE_STRING,
-#                             example="Password reset email sent"
-#                         ),
-#                         'email': openapi.Schema(
-#                             type=openapi.TYPE_STRING,
-#                             format='email',
-#                             description='Email where reset link was sent'
-#                         )
-#                     }
-#                 )
-#             ),
-#             400: openapi.Response(
-#                 description="Bad request",
-#                 schema=openapi.Schema(
-#                     type=openapi.TYPE_OBJECT,
-#                     properties={
-#                         'error': openapi.Schema(
-#                             type=openapi.TYPE_STRING,
-#                             example="Email is required"
-#                         )
-#                     }
-#                 )
-#             ),
-#             404: openapi.Response(
-#                 description="Not found",
-#                 schema=openapi.Schema(
-#                     type=openapi.TYPE_OBJECT,
-#                     properties={
-#                         'error': openapi.Schema(
-#                             type=openapi.TYPE_STRING,
-#                             example="User not found"
-#                         )
-#                     }
-#                 )
-#             ),
-#             500: openapi.Response(
-#                 description="Internal server error",
-#                 schema=openapi.Schema(
-#                     type=openapi.TYPE_OBJECT,
-#                     properties={
-#                         'error': openapi.Schema(
-#                             type=openapi.TYPE_STRING,
-#                             example="Failed to send password reset email"
-#                         )
-#                     }
-#                 )
-#             )
-#         }
-#     )
-#     def post(self, request):
-#         email = request.data.get("email", "").strip()
-#         if not email:
-#             return Response(
-#                 {"error": "Email is required"}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
+class ForgotPasswordView(APIView):
+    @swagger_auto_schema(
+        operation_description="Endpoint for forgot password",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],
+            properties={
+                'email': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    format='email',
+                    description='Registered email address'
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Password reset email sent",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="Password reset email sent"
+                        ),
+                        'email': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format='email',
+                            description='Email where reset link was sent'
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Bad request",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="Email is required"
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description="Not found",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="User not found"
+                        )
+                    }
+                )
+            ),
+            500: openapi.Response(
+                description="Internal server error",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            example="Failed to send password reset email"
+                        )
+                    }
+                )
+            )
+        }
+    )
+    def post(self, request):
+        email = request.data.get("email", "").strip()
+        if not email:
+            return Response(
+                {"error": "Email is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-#         try:
-#             user = User.objects.get(email=email)
+        try:
+            user = User.objects.get(email=email)
             
-#             reset_token = ''.join(random.choices(
-#                 string.ascii_uppercase + string.ascii_lowercase + string.digits, 
-#                 k=6 
-#             ))
+            reset_token = ''.join(random.choices(
+                string.ascii_uppercase + string.ascii_lowercase + string.digits, 
+                k=6 
+            ))
             
-#             # Delete any existing tokens and create new one
-#             ResetPassword.objects.filter(user=user).delete()
-#             ResetPassword.objects.create(
-#                 user=user,
-#                 reset_token=reset_token
-#             )
+            # Delete any existing tokens and create new one
+            ResetPassword.objects.filter(user=user).delete()
+            ResetPassword.objects.create(
+                user=user,
+                reset_token=reset_token
+            )
             
-#             # Prepare email content
-#             subject = f"Password Reset Request for Basera Account"
-#             message = f"""
-#             Hello {user.username or 'User'},
+            # Prepare email content
+            subject = f"Password Reset Request for Basera Account"
+            message = f"""
+            Hello {user.username or 'User'},
 
-#             Your password reset token is: {reset_token}
+            Your password reset token is: {reset_token}
 
-#             This token will expire in 3 hours.
+            This token will expire in 3 hours.
 
-#             If you didn't request this, please ignore this email or contact support.
+            If you didn't request this, please ignore this email or contact support.
 
-#             Thank you,
-#             Basera Team
-#             """
+            Thank you,
+            Basera Team
+            """
             
-#             # Send email
-#             try:
-#                 async_task(
-#                     "user.tasks.send_password_reset_email",
-#                     user.email,
-#                     user.username,
-#                     reset_token
-#                 )
+            # Send email
+            try:
+                async_task(
+                    "user.tasks.send_password_reset_email",
+                    user.email,
+                    user.username,
+                    reset_token
+                )
                 
-#                 return Response(
-#                     {
-#                         "message": "Password reset email sent",
-#                         "email": user.email
-#                     },
-#                     status=status.HTTP_200_OK
-#                 )
+                return Response(
+                    {
+                        "message": "Password reset email sent",
+                        "email": user.email
+                    },
+                    status=status.HTTP_200_OK
+                )
                 
-#             except Exception as e:
-#                 import traceback
-#                 traceback.print_exc()  # shows full error in console
-#                 return Response(
-#                     {"error": f"Failed to send password reset email: {str(e)}"},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
+            except Exception as e:
+                import traceback
+                traceback.print_exc()  # shows full error in console
+                return Response(
+                    {"error": f"Failed to send password reset email: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
 
-#         except User.DoesNotExist:
-#             return Response(
-#                 {"error": "User not found"}, 
-#                 status=status.HTTP_404_NOT_FOUND
-#             )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class VerifyResetView(APIView):
     @swagger_auto_schema(
@@ -764,11 +765,11 @@ class RegisterView(APIView):
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
-            # Build full verification link pointing to your API
-            # verify_url = f"{settings.DOMAIN_NAME}/api/v1/email-verify/{access_token}/"
+           
+            verify_url = f"{settings.DOMAIN_NAME}/api/v1/email-verify/{access_token}/"
 
             
-            # send_verification_email( user_instance.id,verify_url)
+            send_verification_email( user_instance.id,verify_url)
                
 
             # Return user data + tokens

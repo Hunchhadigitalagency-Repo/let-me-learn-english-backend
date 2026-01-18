@@ -20,3 +20,5 @@ django-allauth
 google-auth
 drf-yasg
 python-jose
+django-q2==1.8.0
+django-redis==6.0.0

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<body style="font-family: Arial, sans-serif; color:#333;">
+    <h2>Hello {{ user.username }},</h2>
+
+    <p>Thank you for registering. Please verify your email:</p>
+
+    <p>
+        <a href="{{ verify_url }}" style="background:#007bff;color:#fff;padding:12px 20px;
+                text-decoration:none;border-radius:5px;display:inline-block;">
+            Verify Email
+        </a>
+    </p>
+
+    <p>If you didn’t request this, please ignore the email.</p>
+</body>
+
+</html>
