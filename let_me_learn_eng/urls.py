@@ -15,9 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-from django.conf import settings
+from django.urls import path, include, re_path
 from django.conf.urls.static import static
+from django.conf import settings
+from .swagger import schema_view
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,3 +30,18 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += [
+        # JSON and YAML endpoints (must come FIRST)
+        re_path(r'^swagger(?P<format>\.json|\.yaml)$', 
+                schema_view.without_ui(cache_timeout=0), 
+                name='schema-json'),
+        
+        # UI endpoints
+        path('swagger/', 
+             TemplateView.as_view(template_name='swagger-ui-custom.html'), 
+             name='schema-swagger-ui-custom'),
+        
+    ]
+

@@ -1,0 +1,372 @@
+<!-- templates/swagger-ui-custom.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KPAT APIs</title>
+
+  <!-- Swagger UI CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css">
+
+  <style>
+    /* Blur overlay when not authenticated */
+    #swagger-ui.blurred {
+      filter: blur(8px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Dark overlay behind login box */
+    #login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #login-overlay.hidden {
+      display: none;
+    }
+
+    /* Login box styling */
+    #swagger-login-box {
+      background: #ffffff;
+      border: 1px solid #ddd;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      z-index: 9999;
+      font-family: sans-serif;
+      width: 360px;
+      max-width: 90%;
+    }
+
+    #swagger-login-box h3 {
+      margin: 0 0 20px 0;
+      text-align: center;
+      color: #333;
+      font-size: 24px;
+    }
+
+    #swagger-login-box input {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 12px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #swagger-login-box input:focus {
+      outline: none;
+      border-color: #4990e2;
+      box-shadow: 0 0 0 3px rgba(73, 144, 226, 0.1);
+    }
+
+    #swagger-login-box button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #4990e2;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    #swagger-login-box button:hover {
+      background: #357abd;
+    }
+
+    #swagger-login-box button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    #swagger-msg {
+      font-size: 14px;
+      color: #333;
+      margin-top: 15px;
+      min-height: 20px;
+      text-align: center;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .success {
+      color: #28a745;
+      background: #d4edda;
+    }
+
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+    }
+
+    .info {
+      color: #004085;
+      background: #cce5ff;
+    }
+
+    /* Small logout button in corner after login */
+    #logout-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 9999;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    #logout-btn:hover {
+      background: #c82333;
+    }
+
+    #logout-btn.visible {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="swagger-ui" class="blurred"></div>
+
+  <!-- Dark overlay with login box -->
+  <div id="login-overlay">
+    <div id="swagger-login-box">
+      <h3>🔐 Authentication Required</h3>
+      <div>
+        <!-- NOTE: user will enter EMAIL here -->
+        <input id="sw-email" placeholder="Email" />
+        <input id="sw-password" type="password" placeholder="Password" />
+        <button id="sw-login">Login</button>
+      </div>
+      <div id="swagger-msg"></div>
+    </div>
+  </div>
+
+  <!-- Logout button (hidden until logged in) -->
+  <button id="logout-btn">Logout</button>
+
+  <!-- Swagger UI JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-standalone-preset.min.js"></script>
+
+  <script>
+    const swaggerUiEl = document.getElementById('swagger-ui');
+    const loginOverlay = document.getElementById('login-overlay');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // ✅ Adjust this if your app is mounted under /api/
+    // If your project urls.py is like: path("api/", include("user.urls"))
+    // then set LOGIN_URL = "/api/auth/login/" and LOGOUT_URL = "/api/auth/logout/"
+    const LOGIN_URL = "/api/v1/auth/login/";
+    const LOGOUT_URL = "/api/v1/auth/logout/";
+
+    window.onload = function () {
+      const specUrl = "/swagger.json";
+
+      try {
+        const ui = SwaggerUIBundle({
+          url: specUrl,
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          plugins: [
+            SwaggerUIBundle.plugins.DownloadUrl
+          ],
+          layout: "StandaloneLayout",
+          requestInterceptor: function(req) {
+            const token = localStorage.getItem('swagger_jwt');
+            if (token) {
+              req.headers['Authorization'] = 'Bearer ' + token;
+            }
+            return req;
+          },
+          onComplete: function() {
+            console.log('Swagger UI loaded successfully');
+          }
+        });
+
+        window.ui = ui;
+
+        // Auto-auth if token exists
+        setTimeout(() => {
+          const existing = localStorage.getItem('swagger_jwt');
+          if (existing) {
+            authenticateAndShow(existing);
+          }
+        }, 400);
+
+      } catch (error) {
+        console.error('Error initializing Swagger UI:', error);
+        swaggerUiEl.innerHTML =
+          '<div style="padding: 20px; color: red;">Error loading Swagger UI: ' + error.message + '</div>';
+      }
+
+      function authenticateAndShow(token) {
+        try {
+          if (window.ui && window.ui.authActions && window.ui.authActions.authorize) {
+            // This makes Swagger UI show "Authorized" and apply auth to Try-it-out
+            window.ui.authActions.authorize({
+              Bearer: {
+                name: 'Authorization',
+                schema: { type: 'apiKey', in: 'header', name: 'Authorization' },
+                value: 'Bearer ' + token
+              }
+            });
+          }
+
+          // Remove blur and hide login
+          swaggerUiEl.classList.remove('blurred');
+          loginOverlay.classList.add('hidden');
+          logoutBtn.classList.add('visible');
+
+        } catch (e) {
+          console.warn('Authorization error:', e);
+          logout(); // fallback to logged-out state
+        }
+      }
+
+      function showMessage(msg, type = 'info') {
+        const msgEl = document.getElementById('swagger-msg');
+        msgEl.innerText = msg;
+        msgEl.className = type;
+      }
+
+      async function logout() {
+        const refresh = localStorage.getItem('swagger_refresh');
+        const access = localStorage.getItem('swagger_jwt');
+
+        // Call backend logout to blacklist refresh token (optional but recommended)
+        try {
+          if (refresh) {
+            await fetch(LOGOUT_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(access ? { 'Authorization': 'Bearer ' + access } : {})
+              },
+              body: JSON.stringify({ refresh })
+            });
+          }
+        } catch (e) {
+          console.warn("Logout API call failed:", e);
+        }
+
+        // Clear local storage tokens
+        localStorage.removeItem('swagger_jwt');
+        localStorage.removeItem('swagger_refresh');
+
+        // Tell Swagger UI to clear auth state
+        if (window.ui && window.ui.authActions && window.ui.authActions.logout) {
+          window.ui.authActions.logout(['Bearer']);
+        }
+
+        // Show blur and login overlay
+        swaggerUiEl.classList.add('blurred');
+        loginOverlay.classList.remove('hidden');
+        logoutBtn.classList.remove('visible');
+
+        document.getElementById('sw-email').value = '';
+        document.getElementById('sw-password').value = '';
+        showMessage('Logged out successfully', 'info');
+      }
+
+      // Login button
+      document.getElementById('sw-login').onclick = async function () {
+        const email = document.getElementById('sw-email').value.trim();
+        const password = document.getElementById('sw-password').value;
+        const loginBtn = this;
+
+        if (!email || !password) {
+          showMessage("Please provide both email and password", "error");
+          return;
+        }
+
+        loginBtn.disabled = true;
+        showMessage("Logging in...", "info");
+
+        try {
+          const resp = await fetch(LOGIN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })  // ✅ matches your Django LoginView
+          });
+
+          const data = await resp.json().catch(() => ({}));
+
+          if (!resp.ok) {
+            showMessage(data.error || data.detail || 'Login failed', "error");
+            loginBtn.disabled = false;
+            return;
+          }
+
+          // ✅ Your backend returns: { refresh, access, user }
+          const access = data.access;
+          const refresh = data.refresh;
+
+          if (!access) {
+            showMessage('No access token received', "error");
+            console.log('Login response:', data);
+            loginBtn.disabled = false;
+            return;
+          }
+
+          localStorage.setItem('swagger_jwt', access);
+          if (refresh) localStorage.setItem('swagger_refresh', refresh);
+
+          showMessage('✓ Login successful!', "success");
+
+          setTimeout(() => {
+            authenticateAndShow(access);
+            loginBtn.disabled = false;
+          }, 500);
+
+        } catch (err) {
+          showMessage('Error: ' + (err.message || 'Connection failed'), "error");
+          console.error('Login error:', err);
+          loginBtn.disabled = false;
+        }
+      };
+
+      // Logout button
+      logoutBtn.onclick = logout;
+
+      // Allow Enter key to submit
+      document.getElementById('sw-password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          document.getElementById('sw-login').click();
+        }
+      });
+
+      document.getElementById('sw-email').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          document.getElementById('sw-password').focus();
+        }
+      });
+    };
+  </script>
+</body>
+</html>
