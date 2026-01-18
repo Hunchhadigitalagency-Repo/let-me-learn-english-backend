@@ -239,15 +239,16 @@ class LoginView(APIView):
             )
 
         # Authenticate user
-        user = authenticate(username=user_obj.username, password=password)
-        if not user:
+        if not user_obj.check_password(password):
             return Response(
                 {"error": "Invalid credentials"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
 
         # Fetch user profile
-        profile = UserProfile.objects.filter(user=user).first()
+        profile = UserProfile.objects.filter(user=user_obj).first()
         if not profile:
             return Response(
                 {"error": "User profile not found"},
@@ -274,9 +275,9 @@ class LoginView(APIView):
             )
 
         # Generate tokens
-        refresh = RefreshToken.for_user(user)
-        serialized_user = UserSerializer(user, context={'request': request})
-
+        refresh = RefreshToken.for_user(user_obj)
+        serialized_user = UserSerializer(user_obj, context={'request': request}) 
+    
         return Response(
             {
                 "refresh": str(refresh),
