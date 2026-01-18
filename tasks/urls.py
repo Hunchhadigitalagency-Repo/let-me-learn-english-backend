@@ -1,11 +1,14 @@
 from django.urls import path
-from tasks.viewsets.activity_views import SpeakingActivityViewSet
+from tasks.viewsets.speaking_activity_views import SpeakingActivityViewSet
 from tasks.viewsets.tasks_views import TaskViewSet
-from tasks.viewsets.activity_sample_views import SpeakingActivitySampleViewSet
+from tasks.viewsets.speaking_activity_sample_views import SpeakingActivitySampleViewSet
 
-from tasks.viewsets.activity_question_views import SpeakingActivityQuestionViewSet
+from tasks.viewsets.speaking_activity_question_views import SpeakingActivityQuestionViewSet
 from tasks.viewsets.reading_activity_views import ReadingActivityViewSet
 from tasks.viewsets.reading_activity_question_views import ReadingActivityQuestionViewSet
+from tasks.viewsets.listening_activity_views import ListeningActivityViewSet
+from tasks.viewsets.listening_activity_question_views import ListeningActivityQuestionViewSet
+from tasks.viewsets.writing_activity_views import WritingActivityViewSet
 urlpatterns = [
     path('tasks/', TaskViewSet.as_view({
         'get': 'list',
@@ -74,5 +77,42 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='reading-question-detail'),
+    
+    path('listening-activities/', ListeningActivityViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name='listening-activity-list-create'),
+
+    path('listening-activities/<int:pk>/', ListeningActivityViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'patch': 'partial_update',
+        'delete': 'destroy'
+    }), name='listening-activity-detail'),
+    path('listening-activity-questions/', ListeningActivityQuestionViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+        }), name='listening-question-list-create'),
+
+    path('listening-activity-questions/<int:pk>/', ListeningActivityQuestionViewSet.as_view({
+            'get': 'retrieve',
+            'put': 'update',
+            'patch': 'partial_update',
+            'delete': 'destroy'
+        }), name='listening-question-detail'),
+    
+    path('writing-activities/', WritingActivityViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name='writing-activity-list-create'),
+
+    # Retrieve, Update (PUT), Partial Update (PATCH), Delete
+    path('writing-activities/<int:pk>/', WritingActivityViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'patch': 'partial_update',
+        'delete': 'destroy'
+    }), name='writing-activity-detail'),
+
     
 ]

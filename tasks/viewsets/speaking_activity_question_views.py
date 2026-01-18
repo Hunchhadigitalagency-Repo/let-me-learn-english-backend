@@ -1,26 +1,46 @@
+# tasks/viewsets/activity_question_views.py
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from tasks.models import SpeakingActivityQuestion
-from tasks.serializers.activity_question_serializers import SpeakingActivityQuestionSerializer
+from tasks.serializers.speaking_activity_question_serializers import (
+    SpeakingActivityQuestionCreateSerializer,
+    SpeakingActivityQuestionListSerializer
+)
+from utils.paginator import CustomPageNumberPagination
 
 class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
+    """
+    Full CRUD ViewSet for SpeakingActivityQuestion with dynamic serializers and pagination.
+    """
 
-    # List all questions
+    # Helper to select serializer based on action
+    def get_serializer_class(self, action):
+        if action in ['list', 'retrieve']:
+            return SpeakingActivityQuestionListSerializer
+        return SpeakingActivityQuestionCreateSerializer
+
+    # List all questions with pagination
     def list(self, request):
-        questions = SpeakingActivityQuestion.objects.all()
-        serializer = SpeakingActivityQuestionSerializer(questions, many=True, context={'request': request})
-        return Response(serializer.data)
+        questions = SpeakingActivityQuestion.objects.all().order_by('-id')
+        paginator = CustomPageNumberPagination()
+        paginated_questions = paginator.paginate_queryset(questions, request)
+
+        serializer_class = self.get_serializer_class('list')
+        serializer = serializer_class(paginated_questions, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single question
     def retrieve(self, request, pk=None):
         question = get_object_or_404(SpeakingActivityQuestion, pk=pk)
-        serializer = SpeakingActivityQuestionSerializer(question, context={'request': request})
+        serializer_class = self.get_serializer_class('retrieve')
+        serializer = serializer_class(question, context={'request': request})
         return Response(serializer.data)
 
     # Create a new question
     def create(self, request):
-        serializer = SpeakingActivityQuestionSerializer(data=request.data, context={'request': request})
+        serializer_class = self.get_serializer_class('create')
+        serializer = serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -29,21 +49,23 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
     # Update a question completely (PUT)
     def update(self, request, pk=None):
         question = get_object_or_404(SpeakingActivityQuestion, pk=pk)
-        serializer = SpeakingActivityQuestionSerializer(question, data=request.data, context={'request': request})
+        serializer_class = self.get_serializer_class('update')
+        serializer = serializer_class(question, data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Partial update (PATCH), handles file uploads
+    # Partial update (PATCH) with file handling
     def partial_update(self, request, pk=None):
         question = get_object_or_404(SpeakingActivityQuestion, pk=pk)
 
-        # Handle file uploads
+        # Handle attachment upload
         if 'attachment' in request.FILES:
             question.attachment = request.FILES['attachment']
 
-        serializer = SpeakingActivityQuestionSerializer(
+        serializer_class = self.get_serializer_class('partial_update')
+        serializer = serializer_class(
             question, data=request.data, partial=True, context={'request': request}
         )
         if serializer.is_valid():

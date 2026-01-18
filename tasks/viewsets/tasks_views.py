@@ -14,7 +14,7 @@ class TaskViewSet(viewsets.ViewSet):
 
     # List all tasks
     def list(self, request):
-        tasks = Task.objects.all()
+        tasks = Task.objects.all().order_by('-id')
         serializer = TaskSerializer(tasks, many=True,context={'request': request})
         return Response(serializer.data)
 

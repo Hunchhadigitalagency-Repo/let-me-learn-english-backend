@@ -78,3 +78,51 @@ class ReadingAcitivityQuestion(models.Model):
     is_correct_answer=models.CharField(max_length=255)
     type=models.CharField(max_length=255,choices=READ_TYPE)
     
+    
+    
+class ListeningActivity(models.Model):
+    task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
+    title=models.CharField(max_length=255)
+    duration=models.DecimalField(max_digits=5, decimal_places=2)
+    instruction=models.TextField()
+    audio_file=models.FileField(upload_to='listening_file/',null=True,blank=True)
+    
+    
+    def __str__(self):
+        return self.title
+    
+LISTENING_CHOICES=[
+    ('part1','part1'),
+    ('form_question','form_question')
+]   
+    
+class ListeningActivityQuestion(models.Model):
+    listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
+    type=models.CharField(max_length=255,choices=LISTENING_CHOICES)
+    question=models.CharField(max_length=255)
+    answer_1=models.CharField(max_length=255)
+    answer_2=models.CharField(max_length=255)
+    answer_3=models.CharField(max_length=255)
+    answer_4=models.CharField(max_length=255)
+    is_correct_answer=models.CharField(max_length=255)
+    
+    
+    def __str__(self):
+        return self.question
+    
+    
+    
+class WritingActivity(models.Model):
+    task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
+    title=models.CharField(max_length=255)
+    duration=models.DecimalField(max_digits=5, decimal_places=2)
+    instruction=models.TextField()
+    writing_sample=models.CharField(max_length=255)
+    
+    
+    def __str__(self):
+        return self.title
+    
+    
+    
+    
