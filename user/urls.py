@@ -10,7 +10,7 @@ from rest_framework.routers import DefaultRouter
 
 
 
-from user.viewsets.auth_views import LoginView,  VerifyResetView, ResetPasswordView,UserProfileUpdateView,LogoutView,ChangePasswordView,RegisterView ,VerifyEmailView,DisableAccountAPIView,DeleteAccountAPIView
+from user.viewsets.auth_views import LoginView,  VerifyResetView, ResetPasswordView,UserProfileUpdateView,LogoutView,ChangePasswordView,RegisterView ,VerifyEmailView,DisableAccountAPIView,DeleteAccountAPIView,ForgotPasswordView
 from django.urls import path, include
 
 from user.viewsets.student_views import StudentRegisterView,StudentLoginView
@@ -30,7 +30,7 @@ router.register(r'schools', SchoolViewSet, basename='school')
 urlpatterns = [
     # google login
     
-    # path('email-verify/<str:token>/',VerifyEmailView.as_view(),name="email-verify"),
+    path('email-verify/<str:token>/',VerifyEmailView.as_view(),name="email-verify"),
     path('', include(router.urls)),
 
     #app googlelogin
@@ -49,7 +49,7 @@ urlpatterns = [
 
     path("auth/change-password/",ChangePasswordView.as_view(), name="change-password"),
     # forgot password
-    # path("auth/forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
+    path("auth/forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
     path("auth/verify-reset/",  VerifyResetView.as_view(), name="verify-reset"),
     path("auth/reset-password/",  ResetPasswordView.as_view(), name="reset-password"),
     path("auth/profile/",UserProfileUpdateView.as_view(),name="profile-update"),

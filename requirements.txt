@@ -29,3 +29,12 @@ six==1.17.0
 sqlparse==0.5.5
 uritemplate==4.2.0
 urllib3==2.6.3
+
+Pillow
+djangorestframework-simplejwt==5.3.1
+django-allauth
+google-auth
+drf-yasg
+python-jose
+django-q2==1.8.0
+django-redis==6.0.0

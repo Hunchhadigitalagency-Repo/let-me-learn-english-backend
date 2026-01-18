@@ -30,7 +30,7 @@ DEBUG = True
 
 # settings.py
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-ALLOWED_HOSTS = ['lmleapi.hunchhadigital.com.np', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['lmleapi.hunchhadigital.com.np', 'localhost', '127.0.0.1','0.0.0.0', ]
 
 # Application definition
 
@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     
     'user',
     
-    'tasks'
+    'tasks',
+    'django_q'
 
 ]
 
@@ -199,10 +200,36 @@ AUTH_USER_MODEL = 'user.User'
 SITE_ID = 1
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.hunchhadigital.com.np')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 465))
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'smtp@hunchhadigital.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'Ultimate@22')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@hunchhadigital.com.np')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'sandbox.smtp.mailtrap.io')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 2525))
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '8ced45b20462fd')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'ce10fc33e54a20')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@samishayonhgang.com')
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # redis = service name in docker-compose
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+
+Q_CLUSTER = {
+    'name': 'DjangoQ',
+    'workers': 2,            
+    'recycle': 500,           
+    'timeout': 60,           # increased timeout
+    'retry': 120,               
+    'queue_limit': 50,        
+    'bulk': 3,               # send 10 emails per task
+    'orm': 'default',         
+}  
+
+
+FRONTEND_VERIFY_REDIRECT_URL="https://baserasolutions.com/login/"
+DOMAIN_NAME = "http://localhost:8002"  
