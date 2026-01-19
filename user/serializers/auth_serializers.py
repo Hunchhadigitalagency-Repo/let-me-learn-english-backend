@@ -192,7 +192,7 @@ class RegisterSerializer(serializers.Serializer):
         user.save()
 
         
-        UserProfile.objects.create(user=user,user_type="admin")
+        UserProfile.objects.create(user=user,user_type="school")
 
        
         serializer = UserSerializer(user,context=self.context)
