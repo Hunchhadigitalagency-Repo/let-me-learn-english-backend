@@ -8,7 +8,8 @@ from tasks.serializers.reading_activity_question_serializers import (
     ReadingActivityQuestionListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 class ReadingActivityQuestionViewSet(viewsets.ViewSet):
 
     # Helper to choose serializer based on action
@@ -18,6 +19,10 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return ReadingActivityQuestionCreateSerializer
 
     # List all questions with pagination
+    @swagger_auto_schema(
+        operation_description="List all reading activity questions with pagination",
+        responses={200: ReadingActivityQuestionListSerializer(many=True)}
+    )
     def list(self, request):
         questions = ReadingAcitivityQuestion.objects.all().order_by('-id')
 
@@ -29,6 +34,10 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single question
+    @swagger_auto_schema(
+        operation_description="Retrieve a single reading activity question by ID",
+        responses={200: ReadingActivityQuestionListSerializer()}
+    )
     def retrieve(self, request, pk=None):
         question = get_object_or_404(ReadingAcitivityQuestion, pk=pk)
         serializer_class = self.get_serializer_class('retrieve')
@@ -36,6 +45,14 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new question
+    @swagger_auto_schema(
+        operation_description="Create a new reading activity question",
+        request_body=ReadingActivityQuestionCreateSerializer,
+        responses={
+            201: ReadingActivityQuestionListSerializer(),
+            400: "Bad Request"
+        }
+    )
     def create(self, request):
         serializer_class = self.get_serializer_class('create')
         serializer = serializer_class(data=request.data, context={'request': request})
@@ -45,6 +62,15 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a question completely (PUT)
+    @swagger_auto_schema(
+        operation_description="Update a reading activity question completely",
+        request_body=ReadingActivityQuestionCreateSerializer,
+        responses={
+            200: ReadingActivityQuestionListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def update(self, request, pk=None):
         question = get_object_or_404(ReadingAcitivityQuestion, pk=pk)
         serializer_class = self.get_serializer_class('update')
@@ -55,6 +81,15 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @swagger_auto_schema(
+        operation_description="Partially update a reading activity question",
+        request_body=ReadingActivityQuestionCreateSerializer,
+        responses={
+            200: ReadingActivityQuestionListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def partial_update(self, request, pk=None):
         question = get_object_or_404(ReadingAcitivityQuestion, pk=pk)
         serializer_class = self.get_serializer_class('partial_update')
@@ -65,6 +100,10 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a question
+    @swagger_auto_schema(
+        operation_description="Delete a reading activity question",
+        responses={204: "Deleted successfully", 404: "Not Found"}
+    )
     def destroy(self, request, pk=None):
         question = get_object_or_404(ReadingAcitivityQuestion, pk=pk)
         question.delete()

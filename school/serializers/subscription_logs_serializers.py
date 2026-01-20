@@ -9,7 +9,7 @@ class SubscriptionLogSerializer(serializers.ModelSerializer):
         model = SubscriptionLog
         fields = (
             "id",
-            "subscription",       # you can remove if using nested serializer
+            "subscription",      
             "school",
             "changed_by",
             "old_status",

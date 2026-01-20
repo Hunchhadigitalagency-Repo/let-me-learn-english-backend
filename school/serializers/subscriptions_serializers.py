@@ -6,6 +6,7 @@ class SubscriptionHistoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionHistory
         fields = (
+            'school',
             "start_date",
             "end_date",
             "package",

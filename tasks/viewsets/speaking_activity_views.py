@@ -8,7 +8,8 @@ from tasks.serializers.speaking_activity_serializers import (
     SpeakingActivityListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 class SpeakingActivityViewSet(viewsets.ViewSet):
     """
     Full CRUD ViewSet for SpeakingActivity with dynamic serializers and pagination.
@@ -21,6 +22,10 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return SpeakingActivityCreateSerializer
 
     # List all speaking activities with pagination
+    @swagger_auto_schema(
+        operation_description="List all speaking activities with pagination",
+        responses={200: SpeakingActivityListSerializer(many=True)}
+    )
     def list(self, request):
         activities = SpeakingActivity.objects.all().order_by('-id')
         paginator = CustomPageNumberPagination()
@@ -31,6 +36,10 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single speaking activity
+    @swagger_auto_schema(
+        operation_description="Retrieve a single speaking activity by ID",
+        responses={200: SpeakingActivityListSerializer()}
+    )
     def retrieve(self, request, pk=None):
         activity = get_object_or_404(SpeakingActivity, pk=pk)
         serializer_class = self.get_serializer_class('retrieve')
@@ -38,6 +47,14 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new speaking activity
+    @swagger_auto_schema(
+        operation_description="Create a new speaking activity",
+        request_body=SpeakingActivityCreateSerializer,
+        responses={
+            201: SpeakingActivityListSerializer(),
+            400: "Bad Request"
+        }
+    )
     def create(self, request):
         serializer_class = self.get_serializer_class('create')
         serializer = serializer_class(data=request.data, context={'request': request})
@@ -47,6 +64,15 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a speaking activity completely (PUT)
+    @swagger_auto_schema(
+        operation_description="Update a speaking activity completely",
+        request_body=SpeakingActivityCreateSerializer,
+        responses={
+            200: SpeakingActivityListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def update(self, request, pk=None):
         activity = get_object_or_404(SpeakingActivity, pk=pk)
         serializer_class = self.get_serializer_class('update')
@@ -57,6 +83,15 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @swagger_auto_schema(
+        operation_description="Partially update a speaking activity",
+        request_body=SpeakingActivityCreateSerializer,
+        responses={
+            200: SpeakingActivityListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def partial_update(self, request, pk=None):
         activity = get_object_or_404(SpeakingActivity, pk=pk)
         serializer_class = self.get_serializer_class('partial_update')
@@ -67,6 +102,10 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete speaking activity
+    @swagger_auto_schema(
+        operation_description="Delete a speaking activity",
+        responses={204: "Deleted successfully", 404: "Not Found"}
+    )
     def destroy(self, request, pk=None):
         activity = get_object_or_404(SpeakingActivity, pk=pk)
         activity.delete()
