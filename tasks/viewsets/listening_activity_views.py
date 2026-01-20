@@ -7,6 +7,8 @@ from tasks.serializers.listening_activity_serializers import (
     ListeningActivityCreateSerializer,
     ListeningActivityListSerializer
 )
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from utils.paginator import CustomPageNumberPagination
 class ListeningActivityViewSet(viewsets.ViewSet):
     
@@ -16,9 +18,11 @@ class ListeningActivityViewSet(viewsets.ViewSet):
             return ListeningActivityListSerializer
         return ListeningActivityCreateSerializer
 
-    # List all listening activities
-    # List all listening activities with pagination
-    # List all listening activities with pagination
+   
+    @swagger_auto_schema(
+        operation_description="List all listening activities with pagination",
+        responses={200: ListeningActivityListSerializer(many=True)}
+    )
     def list(self, request):
         activities = ListeningActivity.objects.all().order_by('-id')
         
@@ -35,6 +39,10 @@ class ListeningActivityViewSet(viewsets.ViewSet):
 
 
     # Retrieve a single listening activity
+    @swagger_auto_schema(
+        operation_description="Retrieve a single listening activity question by ID",
+        responses={200: ListeningActivityListSerializer()}
+    )
     def retrieve(self, request, pk=None):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         serializer_class = self.get_serializer_class('retrieve')
@@ -42,6 +50,14 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new listening activity
+    @swagger_auto_schema(
+        operation_description="Create a new listening activity question",
+        request_body=ListeningActivityCreateSerializer,
+        responses={
+            201: ListeningActivityListSerializer(),
+            400: "Bad Request"
+        }
+    )
     def create(self, request):
         serializer_class = self.get_serializer_class('create')
         serializer = serializer_class(data=request.data, context={'request': request})
@@ -51,6 +67,15 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a listening activity completely (PUT)
+    @swagger_auto_schema(
+        operation_description="Update a listening activity question completely",
+        request_body=ListeningActivityCreateSerializer,
+        responses={
+            200: ListeningActivityListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def update(self, request, pk=None):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         serializer_class = self.get_serializer_class('update')
@@ -61,6 +86,16 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    
+    @swagger_auto_schema(
+        operation_description="Partially update a listening activity question",
+        request_body=ListeningActivityCreateSerializer,
+        responses={
+            200: ListeningActivityListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def partial_update(self, request, pk=None):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         serializer_class = self.get_serializer_class('partial_update')
@@ -71,6 +106,11 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a listening activity
+    @swagger_auto_schema(
+        operation_description="Delete a listening activity question",
+        responses={204: "Deleted successfully", 404: "Not Found"}
+    )
+
     def destroy(self, request, pk=None):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         activity.delete()

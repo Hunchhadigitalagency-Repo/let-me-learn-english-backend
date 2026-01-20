@@ -12,8 +12,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 from utils.urlsfixer import build_https_url
 from django.contrib.auth import get_user_model
-
-
+from user.models import School 
+from school.models import SubscriptionHistory
+from school.serializers.subscriptions_serializers import SubscriptionHistoryListSerializer
 User = get_user_model()
 
 class UserBasicSerializer(serializers.ModelSerializer):
@@ -31,13 +32,14 @@ class UserSerializer(serializers.ModelSerializer):
     Serializer for User model with UserProfile data.
     """
     profile = serializers.SerializerMethodField()
+    school_subscriptions = serializers.SerializerMethodField()
     date_joined = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
-            'is_active', 'profile', 'date_joined'
+            'is_active', 'profile', 'date_joined','school_subscriptions'
         )
         read_only_fields = ('id', 'date_joined')
 
@@ -61,6 +63,21 @@ class UserSerializer(serializers.ModelSerializer):
             }
         except UserProfile.DoesNotExist:
             return None
+        
+    def get_school_subscriptions(self, obj):
+        """
+        Return all subscription histories for the user's school(s)
+        """
+        try:
+            # Assuming one school per user
+            school = School.objects.filter(user=obj).first()
+            if not school:
+                return []
+        except School.DoesNotExist:
+            return []
+
+        subscriptions = SubscriptionHistory.objects.filter(school=school).order_by('-id')
+        return SubscriptionHistoryListSerializer(subscriptions, many=True).data
         
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     

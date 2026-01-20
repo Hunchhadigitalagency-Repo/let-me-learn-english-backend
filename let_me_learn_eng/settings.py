@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'user',
     
     'tasks',
-    'django_q'
+    'django_q',
+    'school',
 
 ]
 

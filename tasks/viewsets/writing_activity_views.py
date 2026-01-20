@@ -8,7 +8,8 @@ from tasks.serializers.writing_activity_serializers import (
     WritingActivityListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 class WritingActivityViewSet(viewsets.ViewSet):
     """
     CRUD ViewSet for WritingActivity with dynamic serializers and pagination.
@@ -21,6 +22,10 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return WritingActivityCreateSerializer
 
     # List all writing activities with pagination
+    @swagger_auto_schema(
+        operation_description="List all writing activities with pagination",
+        responses={200: WritingActivityListSerializer(many=True)}
+    )
     def list(self, request):
         activities = WritingActivity.objects.all().order_by('-id')
         paginator = CustomPageNumberPagination()
@@ -31,6 +36,10 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single writing activity
+    @swagger_auto_schema(
+        operation_description="Retrieve a single writing activity by ID",
+        responses={200: WritingActivityListSerializer()}
+    )
     def retrieve(self, request, pk=None):
         activity = get_object_or_404(WritingActivity, pk=pk)
         serializer_class = self.get_serializer_class('retrieve')
@@ -38,6 +47,11 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new writing activity
+    @swagger_auto_schema(
+        operation_description="Create a new writing activity",
+        request_body=WritingActivityCreateSerializer,
+        responses={201: WritingActivityListSerializer(), 400: "Bad Request"}
+    )
     def create(self, request):
         serializer_class = self.get_serializer_class('create')
         serializer = serializer_class(data=request.data, context={'request': request})
@@ -47,6 +61,11 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a writing activity completely (PUT)
+    @swagger_auto_schema(
+        operation_description="Update a writing activity completely (PUT)",
+        request_body=WritingActivityCreateSerializer,
+        responses={200: WritingActivityListSerializer(), 400: "Bad Request", 404: "Not Found"}
+    )
     def update(self, request, pk=None):
         activity = get_object_or_404(WritingActivity, pk=pk)
         serializer_class = self.get_serializer_class('update')
@@ -57,6 +76,11 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @swagger_auto_schema(
+        operation_description="Partially update a writing activity (PATCH)",
+        request_body=WritingActivityCreateSerializer,
+        responses={200: WritingActivityListSerializer(), 400: "Bad Request", 404: "Not Found"}
+    )
     def partial_update(self, request, pk=None):
         activity = get_object_or_404(WritingActivity, pk=pk)
         serializer_class = self.get_serializer_class('partial_update')
@@ -67,6 +91,10 @@ class WritingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a writing activity
+    @swagger_auto_schema(
+        operation_description="Delete a writing activity",
+        responses={204: "Deleted successfully", 404: "Not Found"}
+    )
     def destroy(self, request, pk=None):
         activity = get_object_or_404(WritingActivity, pk=pk)
         activity.delete()

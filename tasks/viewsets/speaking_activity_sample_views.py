@@ -8,7 +8,8 @@ from tasks.serializers.speaking_activity_sample_serializers import (
     SpeakingActivitySampleListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 class SpeakingActivitySampleViewSet(viewsets.ViewSet):
     """
     Full CRUD ViewSet for speakingActivitySample with dynamic serializers and pagination.
@@ -21,6 +22,10 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return SpeakingActivitySampleCreateSerializer
 
     # List all samples with pagination
+    @swagger_auto_schema(
+        operation_description="List all speaking activity samples with pagination",
+        responses={200: SpeakingActivitySampleListSerializer(many=True)}
+    )
     def list(self, request):
         samples = speakingActivitySample.objects.all().order_by('-id')
         paginator = CustomPageNumberPagination()
@@ -31,6 +36,10 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single sample
+    @swagger_auto_schema(
+        operation_description="Retrieve a single speaking activity sample by ID",
+        responses={200: SpeakingActivitySampleListSerializer()}
+    )
     def retrieve(self, request, pk=None):
         sample = get_object_or_404(speakingActivitySample, pk=pk)
         serializer_class = self.get_serializer_class('retrieve')
@@ -38,6 +47,14 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new sample
+    @swagger_auto_schema(
+        operation_description="Create a new speaking activity sample",
+        request_body=SpeakingActivitySampleCreateSerializer,
+        responses={
+            201: SpeakingActivitySampleListSerializer(),
+            400: "Bad Request"
+        }
+    )
     def create(self, request):
         serializer_class = self.get_serializer_class('create')
         serializer = serializer_class(data=request.data, context={'request': request})
@@ -47,6 +64,15 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a sample completely (PUT)
+    @swagger_auto_schema(
+        operation_description="Update a speaking activity sample completely",
+        request_body=SpeakingActivitySampleCreateSerializer,
+        responses={
+            200: SpeakingActivitySampleListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def update(self, request, pk=None):
         sample = get_object_or_404(speakingActivitySample, pk=pk)
         serializer_class = self.get_serializer_class('update')
@@ -57,6 +83,15 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @swagger_auto_schema(
+        operation_description="Partially update a speaking activity sample, supports file uploads",
+        request_body=SpeakingActivitySampleCreateSerializer,
+        responses={
+            200: SpeakingActivitySampleListSerializer(),
+            400: "Bad Request",
+            404: "Not Found"
+        }
+    )
     def partial_update(self, request, pk=None):
         sample = get_object_or_404(speakingActivitySample, pk=pk)
         
@@ -74,6 +109,10 @@ class SpeakingActivitySampleViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a sample
+    @swagger_auto_schema(
+        operation_description="Delete a speaking activity sample",
+        responses={204: "Deleted successfully", 404: "Not Found"}
+    )
     def destroy(self, request, pk=None):
         sample = get_object_or_404(speakingActivitySample, pk=pk)
         sample.delete()
