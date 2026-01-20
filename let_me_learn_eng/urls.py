@@ -29,6 +29,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/',include('user.urls')),
+    path('api/v1/',include('school.urls')),
    
     path('api/v1/',include('tasks.urls')),
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
