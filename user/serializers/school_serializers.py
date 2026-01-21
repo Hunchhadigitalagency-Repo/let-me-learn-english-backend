@@ -217,3 +217,19 @@ class SchoolUpdateSerializer(serializers.ModelSerializer):
 
     def get_district(self, obj):
         return obj.district.name if obj.district else None
+
+
+
+from rest_framework import serializers
+from user.models import School
+
+class SchoolBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = [
+            'id',
+            'name',
+            'email',
+            'city',
+            'address',
+        ]
