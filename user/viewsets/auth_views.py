@@ -407,7 +407,8 @@ class ForgotPasswordView(APIView):
                 return Response(
                     {
                         "message": "Password reset email sent",
-                        "email": user.email
+                        "email": user.email,
+                        "link": reset_token,
                     },
                     status=status.HTTP_200_OK
                 )
