@@ -367,11 +367,9 @@ class ForgotPasswordView(APIView):
 
         try:
             user = User.objects.get(email=email)
-            
-            reset_token = ''.join(random.choices(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits, 
-                k=6 
-            ))
+            import secrets
+            reset_token = f"{secrets.randbelow(10**6):06d}"
+            print(reset_token)
             
             # Delete any existing tokens and create new one
             ResetPassword.objects.filter(user=user).delete()
@@ -385,9 +383,9 @@ class ForgotPasswordView(APIView):
             message = f"""
             Hello {user.username or 'User'},
 
-            Your password reset token is: {reset_token}
+            Your password reset opt is: {reset_token}
 
-            This token will expire in 3 hours.
+            This otp will expire in 3 hours.
 
             If you didn't request this, please ignore this email or contact support.
 
@@ -408,7 +406,7 @@ class ForgotPasswordView(APIView):
                     {
                         "message": "Password reset email sent",
                         "email": user.email,
-                        "link": reset_token,
+                        "otp": reset_token,
                     },
                     status=status.HTTP_200_OK
                 )
