@@ -209,7 +209,7 @@ class RegisterSerializer(serializers.Serializer):
         user.save()
 
         
-        UserProfile.objects.create(user=user,user_type="school")
+        UserProfile.objects.create(user=user)
 
        
         serializer = UserSerializer(user,context=self.context)
