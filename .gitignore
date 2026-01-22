@@ -170,3 +170,16 @@ terraform.tfvars
 *.seed
 *.old
 *.backup
+
+
+######################################
+# DATABASES
+######################################
+*.sqlite3
+db.sqlite3           # Add this explicitly
+*.db
+*.psql
+*.dump
+*.sql
+
+
