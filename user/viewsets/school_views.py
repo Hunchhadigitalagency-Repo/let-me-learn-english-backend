@@ -8,24 +8,24 @@ import requests
 from rest_framework_simplejwt.tokens import RefreshToken
 from user.serializers.auth_serializers import UserSerializer
 from user.models import User,UserProfile,School
-class SchoolRegistrationView(generics.CreateAPIView):
-    serializer_class = SchoolRegistrationSerializer
-    permission_classes = [AllowAny] 
+# class SchoolRegistrationView(generics.CreateAPIView):
+#     serializer_class = SchoolRegistrationSerializer
+#     permission_classes = [AllowAny] 
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
           
-            school = serializer.save()
+#             school = serializer.save()
             
-            return Response({
-                "message": "School and User created successfully",
+#             return Response({
+#                 "message": "School and User created successfully",
                 
                
                
-            }, status=status.HTTP_201_CREATED)
+#             }, status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # class SchoolUpdateView(APIView):
 #     permission_classes = [AllowAny]
@@ -132,6 +132,87 @@ class SchoolGoogleLoginView(APIView):
             "user": serializer.data
         })
         
+        
+# class SchoolFacebookLoginView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         access_token = request.data.get("access_token")
+#         if not access_token:
+#             return Response({"error": "No token provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Facebook Graph API call
+#         response = requests.get(
+#             "https://graph.facebook.com/v15.0/me",
+#             params={
+#                 "fields": "id,name,email,picture.width(500).height(500)",
+#                 "access_token": access_token
+#             }
+#         )
+
+#         if response.status_code != 200:
+#             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         userinfo = response.json()
+#         facebook_id = userinfo.get("id")
+#         name = userinfo.get("name", "")
+#         email = userinfo.get("email")
+
+#         # Get Facebook profile picture
+#         picture_data = userinfo.get("picture", {}).get("data", {})
+#         if picture_data.get("is_silhouette", True):
+#             picture = ""  # default avatar
+#         else:
+#             picture = picture_data.get("url", "")
+
+#         if not email:
+#             return Response({"error": "Facebook account does not have an email."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # ---- Create or get User ----
+#         user, created = User.objects.get_or_create(
+#             username=email,
+#             defaults={
+#                 "email": email,
+#                 "first_name": name.split(" ")[0],
+#                 "last_name": " ".join(name.split(" ")[1:]),
+#             }
+#         )
+
+#         # ---- Create or update UserProfile ----
+#         profile, profile_created = UserProfile.objects.get_or_create(
+#             user=user,
+#             defaults={
+#                 "facebook_id": facebook_id,
+#                 "facebook_avatar": picture,
+#                 "user_type": "school"
+#             }
+#         )
+
+#         if not profile_created:
+#             profile.facebook_id = facebook_id
+#             profile.facebook_avatar = picture
+#             profile.save()
+
+#         # ---- Check account status ----
+#         if profile.is_deleted:
+#             return Response({"error": "Your account is deleted."}, status=403)
+#         if profile.is_disabled:
+#             return Response({"error": "Your account is disabled."}, status=403)
+
+#         # ---- Create School if user_type is school ----
+#         if profile.user_type == "school":
+#             School.objects.get_or_create(user=user)
+
+#         # ---- Generate JWT tokens ----
+#         refresh = RefreshToken.for_user(user)
+#         serializer = UserSerializer(user, context={'request': request})
+
+#         return Response({
+#             "refresh": str(refresh),
+#             "access": str(refresh.access_token),
+#             "user": serializer.data
+#         })
+
         
         
 from rest_framework import viewsets, status
