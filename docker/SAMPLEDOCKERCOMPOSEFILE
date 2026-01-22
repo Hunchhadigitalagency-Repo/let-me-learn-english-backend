@@ -7,7 +7,7 @@ services:
       dockerfile: docker/Dockerfile
     restart: always
     ports:
-      - "8002:8002"   
+      - "8000:8000"   
     volumes:
       - ./:/app
       - ./staticfile:/app/staticfile

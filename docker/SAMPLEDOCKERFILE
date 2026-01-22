@@ -22,8 +22,11 @@ RUN pip install --upgrade pip \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . .
+COPY . /app
 
+# -------------------------
+# RUNTIME
+# -------------------------
 # -------------------------
 # RUNTIME
 # -------------------------
@@ -34,22 +37,21 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copy installed packages from builder stage
+# ✅ INSTALL RUNTIME DEPENDENCIES (THIS WAS MISSING)
+RUN apt-get update && apt-get install -y \
+    netcat-openbsd \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed Python packages
 COPY --from=builder /install /usr/local
 
-# Copy application code
-# ... (rest of the file above)
-
-# Copy application code
+# Copy app
 COPY . /app
 
-# Expose port
 EXPOSE 8000
 
-# 1. Correct the path to the docker folder
-RUN chmod +x /docker/entrypoint.sh
-# 2. Use the exact path where the file exists
-ENTRYPOINT ["/docker/entrypoint.sh"]
+RUN chmod +x /app/docker/entrypoint.sh
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
 
-# Default server command
-CMD ["gunicorn", "let_me_learn_eng.wsgi:application", "--bind", "0.0.0.0:8002"]
+CMD ["gunicorn", "let_me_learn_eng.wsgi:application", "--bind", "0.0.0.0:8000"]
