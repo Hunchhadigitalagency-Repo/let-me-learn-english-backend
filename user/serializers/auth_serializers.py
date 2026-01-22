@@ -163,13 +163,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, validators=[validate_password])
-    confirm_new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={"input_type": "password"},
+        help_text="Current password of the user"
+    )
+    new_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password],
+        style={"input_type": "password"},
+        help_text="New password following password policy"
+    )
+    confirm_new_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={"input_type": "password"},
+        help_text="Must match the new password"
+    )
 
     def validate(self, data):
         if data['new_password'] != data['confirm_new_password']:
-            raise serializers.ValidationError({"confirm_new_password": "New passwords must match."})
+            raise serializers.ValidationError({
+                "confirm_new_password": "New passwords must match."
+            })
         return data
 
 

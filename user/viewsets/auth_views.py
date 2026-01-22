@@ -26,7 +26,7 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from user.serializers.auth_serializers import UserSerializer,UserProfileUpdateSerializer,UserProfileSerializer,ChangePasswordSerializer,RegisterSerializer
+from user.serializers.auth_serializers import AdminRegisterSerializer, UserSerializer,UserProfileUpdateSerializer,UserProfileSerializer,ChangePasswordSerializer,RegisterSerializer
 from rest_framework import generics,permissions,viewsets
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework import status, views, permissions
@@ -367,11 +367,9 @@ class ForgotPasswordView(APIView):
 
         try:
             user = User.objects.get(email=email)
-            
-            reset_token = ''.join(random.choices(
-                string.ascii_uppercase + string.ascii_lowercase + string.digits, 
-                k=6 
-            ))
+            import secrets
+            reset_token = f"{secrets.randbelow(10**6):06d}"
+            print(reset_token)
             
             # Delete any existing tokens and create new one
             ResetPassword.objects.filter(user=user).delete()
@@ -385,9 +383,9 @@ class ForgotPasswordView(APIView):
             message = f"""
             Hello {user.username or 'User'},
 
-            Your password reset token is: {reset_token}
+            Your password reset opt is: {reset_token}
 
-            This token will expire in 3 hours.
+            This otp will expire in 3 hours.
 
             If you didn't request this, please ignore this email or contact support.
 
@@ -407,7 +405,8 @@ class ForgotPasswordView(APIView):
                 return Response(
                     {
                         "message": "Password reset email sent",
-                        "email": user.email
+                        "email": user.email,
+                        "otp": reset_token,
                     },
                     status=status.HTTP_200_OK
                 )
@@ -426,10 +425,14 @@ class ForgotPasswordView(APIView):
                 {"error": "User not found"}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+class VerifyResetView(views.APIView):
+    """
+    Endpoint to verify if a reset token is valid for a user.
+    Does not require a new password and does not delete the token.
+    """
 
-class VerifyResetView(APIView):
     @swagger_auto_schema(
-        operation_description="Endpoint for verify reset",
+        operation_description="Verify reset token for a user. Does not reset password yet.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=['email', 'reset_token'],
@@ -440,7 +443,7 @@ class VerifyResetView(APIView):
         ),
         responses={
             200: openapi.Response(
-                description="Reset token verified",
+                description="Reset token verified successfully",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
@@ -449,7 +452,7 @@ class VerifyResetView(APIView):
                 )
             ),
             400: openapi.Response(
-                description="Bad request",
+                description="Invalid or expired token",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
@@ -462,12 +465,11 @@ class VerifyResetView(APIView):
     def post(self, request):
         email = request.data.get("email")
         reset_token = request.data.get("reset_token")
-        new_password = request.data.get("new_password")
 
         # Basic validation
-        if not email or not reset_token or not new_password:
+        if not email or not reset_token:
             return Response(
-                {"error": "Email, reset token, and new password are required"},
+                {"error": "Email and reset token are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -489,32 +491,19 @@ class VerifyResetView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check token expiration using your model method
+        # Check token expiration
         if token_obj.is_expired():
             return Response(
                 {"error": "Reset token has expired"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate password strength (minimum length)
-        if len(new_password) < 8:
-            return Response(
-                {"error": "Password must be at least 8 characters long"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Update password safely
-        with transaction.atomic():
-            user.set_password(new_password)
-            user.save()
-
-            # Since OneToOne → only one token per user, delete it after use
-            token_obj.delete()
-
+        # If we reach here → token is valid
         return Response(
-            {"message": "Password has been reset successfully"},
+            {"message": "Reset token is valid"},
             status=status.HTTP_200_OK
         )
+
         
 class ResetPasswordView(APIView):
     permission_classes=[AllowAny]
@@ -656,16 +645,31 @@ class LogoutView(APIView):
 
 class ChangePasswordView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     @swagger_auto_schema(
         request_body=ChangePasswordSerializer,
         responses={
-            200: openapi.Response('Password updated successfully'),
-            400: openapi.Response('Validation error')
+            200: openapi.Response(
+                description="Password updated successfully",
+                examples={
+                    "application/json": {"detail": "Password updated successfully"}
+                }
+            ),
+            400: openapi.Response(
+                description="Validation errors",
+                examples={
+                    "application/json": {
+                        "old_password": ["Wrong password."],
+                        "new_password": ["This password is too common."],
+                        "confirm_new_password": ["New passwords must match."]
+                    }
+                }
+            ),
+            401: "Unauthorized (if the user is not authenticated)"
         },
         operation_summary="Change User Password",
-        operation_description="Allows an authenticated user to change their password."
+        operation_description="Allows an authenticated user to change their password by providing the old password and a new password. Both new password and confirm password fields must match."
     )
-
     def post(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(data=request.data)
         user = request.user
@@ -673,14 +677,22 @@ class ChangePasswordView(views.APIView):
         if serializer.is_valid():
             # Check old password
             if not user.check_password(serializer.validated_data['old_password']):
-                return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"old_password": ["Wrong password."]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Set new password
             user.set_password(serializer.validated_data['new_password'])
             user.save()
 
-            return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Password updated successfully"},
+                status=status.HTTP_200_OK
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

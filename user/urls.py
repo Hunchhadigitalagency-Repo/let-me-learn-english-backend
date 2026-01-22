@@ -2,12 +2,16 @@
 from django.urls import path, include
 
 
-# from user.viewsets.custom_token_view import TokenVerification
 
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,   # to get access + refresh token
+    TokenRefreshView,       # to refresh access token
+    TokenVerifyView,
+)
 
 
 from user.viewsets.auth_views import LoginView,  VerifyResetView, ResetPasswordView,UserProfileUpdateView,LogoutView,ChangePasswordView,RegisterView ,VerifyEmailView,DisableAccountAPIView,DeleteAccountAPIView,ForgotPasswordView
@@ -43,7 +47,10 @@ urlpatterns = [
     # admin 
     path("auth/login/", LoginView.as_view(), name="admin-login"),
     path("auth/logout/",LogoutView.as_view(),name="logout"),
-    # path('token/verify/',  TokenVerification.as_view(), name='token_verify'),
+    path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),  # <-- verify token
+
     
    
 
