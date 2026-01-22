@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.conf import settings
 # Create your models here.
 class BlogCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="Name of the blog category")
@@ -55,3 +56,18 @@ class ContactUs(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+class Newsletters(models.Model):
+   
+    subject_header = models.CharField(max_length=255, blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='notification_templates', blank=True)
+    is_active = models.BooleanField(default=True)
+  
+
+
+
+class NowKnowIt(models.Model):
+    common_nepali_english=models.CharField(max_length=255)
+    natural_english=models.CharField(max_length=255)
+    reason=models.TextField()
+    is_active=models.BooleanField(default=True)

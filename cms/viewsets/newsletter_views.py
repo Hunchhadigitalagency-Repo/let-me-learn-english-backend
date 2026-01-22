@@ -1,25 +1,25 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from cms.models import BlogCategory
-from cms.serializers.blogcategory_serializers import (
-    BlogCategoryCreateSerializer,
-    BlogCategoryListSerializer
+from cms.models import Newsletters
+from cms.serializers.newsletter_serializers import (
+    NewsletterCreateSerializer,
+    NewsletterListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
-class BlogCategoryViewSet(viewsets.ViewSet):
+class NewsletterViewSet(viewsets.ViewSet):
 
     def get_queryset(self):
-        return BlogCategory.objects.all().order_by('-created_at')
+        return Newsletters.objects.all().order_by('-id')
 
     # ---------------- LIST ----------------
     @swagger_auto_schema(
-        operation_description="List all blog categories with pagination (latest first)",
-        responses={200: BlogCategoryListSerializer(many=True)}
+        operation_description="List all newsletters with pagination (latest first)",
+        responses={200: NewsletterListSerializer(many=True)}
     )
     def list(self, request):
         queryset = self.get_queryset()
@@ -28,138 +28,138 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         page = paginator.paginate_queryset(queryset, request)
 
         if page is not None:
-            serializer = BlogCategoryListSerializer(page, many=True)
+            serializer = NewsletterListSerializer(page, many=True)
             return paginator.get_paginated_response({
-                "message": "Blog categories fetched successfully",
+                "message": "Newsletters fetched successfully",
                 "data": serializer.data
             })
 
-        serializer = BlogCategoryListSerializer(queryset, many=True)
+        serializer = NewsletterListSerializer(queryset, many=True)
         return Response({
-            "message": "Blog categories fetched successfully",
+            "message": "Newsletters fetched successfully",
             "data": serializer.data
         })
 
     # ---------------- RETRIEVE ----------------
     @swagger_auto_schema(
-        operation_description="Retrieve a single blog category by ID",
+        operation_description="Retrieve a single newsletter by ID",
         manual_parameters=[
             openapi.Parameter(
                 'pk',
                 openapi.IN_PATH,
-                description="Blog category ID",
+                description="Newsletter ID",
                 type=openapi.TYPE_INTEGER,
                 required=True
             )
         ],
         responses={
-            200: BlogCategoryListSerializer(),
+            200: NewsletterListSerializer(),
             404: "Not Found"
         }
     )
     def retrieve(self, request, pk=None):
-        category = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer = BlogCategoryListSerializer(category)
+        newsletter = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = NewsletterListSerializer(newsletter)
         return Response({
-            "message": "Blog category retrieved successfully",
+            "message": "Newsletter retrieved successfully",
             "data": serializer.data
         })
 
     # ---------------- CREATE ----------------
     @swagger_auto_schema(
-        operation_description="Create a new blog category",
-        request_body=BlogCategoryCreateSerializer,
+        operation_description="Create a new newsletter",
+        request_body=NewsletterCreateSerializer,
         responses={
-            201: BlogCategoryListSerializer(),
+            201: NewsletterListSerializer(),
             400: "Bad Request"
         }
     )
     def create(self, request):
-        serializer = BlogCategoryCreateSerializer(data=request.data)
+        serializer = NewsletterCreateSerializer(data=request.data)
 
         if serializer.is_valid():
-            category = serializer.save()
+            newsletter = serializer.save()
             return Response({
-                "message": "Blog category created successfully",
-                "data": BlogCategoryListSerializer(category).data
+                "message": "Newsletter created successfully",
+                "data": NewsletterListSerializer(newsletter).data
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
     @swagger_auto_schema(
-        operation_description="Update a blog category completely by ID",
+        operation_description="Update a newsletter completely by ID",
         manual_parameters=[
             openapi.Parameter(
                 'pk',
                 openapi.IN_PATH,
-                description="Blog category ID",
+                description="Newsletter ID",
                 type=openapi.TYPE_INTEGER,
                 required=True
             )
         ],
-        request_body=BlogCategoryCreateSerializer,
+        request_body=NewsletterCreateSerializer,
         responses={
-            200: BlogCategoryListSerializer(),
+            200: NewsletterListSerializer(),
             400: "Bad Request",
             404: "Not Found"
         }
     )
     def update(self, request, pk=None):
-        category = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer = BlogCategoryCreateSerializer(category, data=request.data)
+        newsletter = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = NewsletterCreateSerializer(newsletter, data=request.data)
 
         if serializer.is_valid():
-            category = serializer.save()
+            newsletter = serializer.save()
             return Response({
-                "message": "Blog category updated successfully",
-                "data": BlogCategoryListSerializer(category).data
+                "message": "Newsletter updated successfully",
+                "data": NewsletterListSerializer(newsletter).data
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
     @swagger_auto_schema(
-        operation_description="Partially update a blog category by ID",
+        operation_description="Partially update a newsletter by ID",
         manual_parameters=[
             openapi.Parameter(
                 'pk',
                 openapi.IN_PATH,
-                description="Blog category ID",
+                description="Newsletter ID",
                 type=openapi.TYPE_INTEGER,
                 required=True
             )
         ],
-        request_body=BlogCategoryCreateSerializer,
+        request_body=NewsletterCreateSerializer,
         responses={
-            200: BlogCategoryListSerializer(),
+            200: NewsletterListSerializer(),
             400: "Bad Request",
             404: "Not Found"
         }
     )
     def partial_update(self, request, pk=None):
-        category = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer = BlogCategoryCreateSerializer(
-            category, data=request.data, partial=True
+        newsletter = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer = NewsletterCreateSerializer(
+            newsletter, data=request.data, partial=True
         )
 
         if serializer.is_valid():
-            category = serializer.save()
+            newsletter = serializer.save()
             return Response({
-                "message": "Blog category partially updated successfully",
-                "data": BlogCategoryListSerializer(category).data
+                "message": "Newsletter partially updated successfully",
+                "data": NewsletterListSerializer(newsletter).data
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
     @swagger_auto_schema(
-        operation_description="Delete a blog category by ID",
+        operation_description="Delete a newsletter by ID",
         manual_parameters=[
             openapi.Parameter(
                 'pk',
                 openapi.IN_PATH,
-                description="Blog category ID",
+                description="Newsletter ID",
                 type=openapi.TYPE_INTEGER,
                 required=True
             )
@@ -170,9 +170,9 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         }
     )
     def destroy(self, request, pk=None):
-        category = get_object_or_404(self.get_queryset(), pk=pk)
-        category.delete()
+        newsletter = get_object_or_404(self.get_queryset(), pk=pk)
+        newsletter.delete()
         return Response(
-            {"message": "Blog category deleted successfully"},
+            {"message": "Newsletter deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
