@@ -236,3 +236,16 @@ Q_CLUSTER = {
 
 FRONTEND_VERIFY_REDIRECT_URL="https://baserasolutions.com/login/"
 DOMAIN_NAME = "http://localhost:8002"  
+
+# Celery (Redis as broker)
+# CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+# CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+
+# CELERY_ACCEPT_CONTENT = ["json"]
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_RESULT_SERIALIZER = "json"
+# CELERY_TIMEZONE = TIME_ZONE
+
+# # Optional but recommended
+# CELERY_TASK_ACKS_LATE = True
+# CELERY_WORKER_PREFETCH_MULTIPLIER = 1
