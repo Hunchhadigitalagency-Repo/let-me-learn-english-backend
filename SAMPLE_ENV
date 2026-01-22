@@ -27,3 +27,7 @@ CSRF_TRUSTED_ORIGINS=https://letmelearnenglish.hunchhadigital.com.np,https://lml
 CSRF_COOKIE_SECURE=True
 SESSION_COOKIE_SECURE=True
 SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,https
+
+
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
