@@ -18,7 +18,7 @@ from user.viewsets.auth_views import LoginView,  VerifyResetView, ResetPasswordV
 from django.urls import path, include
 
 from user.viewsets.student_views import StudentRegisterView,StudentLoginView
-from user.viewsets.school_views import SchoolRegistrationView,SchoolGoogleLoginView,SchoolViewSet
+from user.viewsets.school_views import SchoolGoogleLoginView,SchoolViewSet
 # user_profile_list = UserWithProfileViewSet.as_view({'get': 'list'})
 
 from user.viewsets.address_views import CountryViewSet,ProvinceViewSet,DistrictViewSet
@@ -82,8 +82,9 @@ urlpatterns = [
     # path('delete-user/', DeleteUserAPIView.as_view(), name='delete-user'),
     path('auth/student-register/',StudentRegisterView.as_view(),name='student-register'),
     path('auth/student-login/',StudentLoginView.as_view(),name='student-login'),
+    
    
-    path('auth/school-register/',SchoolRegistrationView.as_view(),name='school-register'),
+    # path('auth/school-register/',SchoolRegistrationView.as_view(),name='school-register'),
    
    
 

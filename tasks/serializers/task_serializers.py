@@ -50,22 +50,22 @@ class SpeakingActivitySerializer(serializers.ModelSerializer):
 
 # Serializer for Task
 class TaskSerializer(serializers.ModelSerializer):
-    speaking_activities = SpeakingActivitySerializer(
-        many=True,
-        read_only=True,
-        source='speakingactivity_set'
-    )
+    # speaking_activities = SpeakingActivitySerializer(
+    #     many=True,
+    #     read_only=True,
+    #     source='speakingactivity_set'
+    # )
 
     class Meta:
         model = Task
-        fields = ['id', 'name', 'description', 'grade', 'speaking_activities']
+        fields = ['id', 'name', 'description', 'grade']
 
     # Ensure nested serializer gets context
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep['speaking_activities'] = SpeakingActivitySerializer(
-            instance.speakingactivity_set.all(),
-            many=True,
-            context=self.context
-        ).data
-        return rep
+    # def to_representation(self, instance):
+    #     rep = super().to_representation(instance)
+    #     rep['speaking_activities'] = SpeakingActivitySerializer(
+    #         instance.speakingactivity_set.all(),
+    #         many=True,
+    #         context=self.context
+    #     ).data
+    #     return rep

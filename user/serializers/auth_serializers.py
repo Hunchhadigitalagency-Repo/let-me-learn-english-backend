@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         try:
-            profile = UserProfile.objects.get(user=obj)
+            profile = UserProfile.objects.get(user=obj,user_type='school')
             # First check if there's a profile picture
             if profile.profile_picture:
                 avatar_url = self.context['request'].build_absolute_uri(profile.profile_picture.url)
@@ -227,7 +227,7 @@ class RegisterSerializer(serializers.Serializer):
         user.save()
 
         
-        UserProfile.objects.create(user=user,user_type="school")
+        UserProfile.objects.create(user=user)
 
        
         serializer = UserSerializer(user,context=self.context)

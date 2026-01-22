@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'tasks',
     'django_q',
     'school',
+    'cms'
 
 ]
 
