@@ -7,6 +7,9 @@ make up
 # Rebuild images and start containers (if needed)
 make up-build
 
+# Make migrations
+make migrations
+
 # Apply database migrations
 make migrate
 

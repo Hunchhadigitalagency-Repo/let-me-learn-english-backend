@@ -22,6 +22,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='task-detail'),
+
+
     path('speaking-activities/', SpeakingActivityViewSet.as_view({
         'get': 'list',
         'post': 'create'
@@ -34,6 +36,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='activity-detail'),
+
+
     path('speaking-activity-samples/', SpeakingActivitySampleViewSet.as_view({
         'get': 'list',
         'post': 'create'
@@ -44,6 +48,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='sample-detail'),
+
+
     path('speaking-activity-questions/', SpeakingActivityQuestionViewSet.as_view({
         'get': 'list',
         'post': 'create'
@@ -54,6 +60,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='question-detail'),
+
+
     path('reading-activities/', ReadingActivityViewSet.as_view({
         'get': 'list',
         'post': 'create'
@@ -65,6 +73,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='reading-activity-detail'),
+
+
     path('reading-activity-questions/', ReadingActivityQuestionViewSet.as_view({
         'get': 'list',
         'post': 'create'
@@ -77,11 +87,13 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='reading-question-detail'),
+
     
     path('listening-activities/', ListeningActivityViewSet.as_view({
         'get': 'list',
         'post': 'create'
     }), name='listening-activity-list-create'),
+
 
     path('listening-activities/<int:pk>/', ListeningActivityViewSet.as_view({
         'get': 'retrieve',
@@ -89,6 +101,8 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='listening-activity-detail'),
+
+    
     path('listening-activity-questions/', ListeningActivityQuestionViewSet.as_view({
     'get': 'list',
     'post': 'create'
