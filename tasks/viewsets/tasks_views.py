@@ -5,6 +5,7 @@ from tasks.models import Task, SpeakingActivity, speakingActivitySample
 from tasks.serializers.task_serializers import TaskSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+
 # ------------------------------
 # Task ViewSet
 # ------------------------------
@@ -12,7 +13,7 @@ class TaskViewSet(viewsets.ViewSet):
     """
     A ViewSet for listing, creating, retrieving, updating, and deleting Tasks
     """
-
+    permission_classes = []  # Define your permissions here
     # List all tasks
     @swagger_auto_schema(
         operation_description="List all tasks",
