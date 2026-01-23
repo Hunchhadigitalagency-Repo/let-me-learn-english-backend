@@ -1,7 +1,5 @@
 from django.db import models
-
-# Create your models here
-from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 GRADE_CHOICES = [(str(i), str(i)) for i in range(1, 11)]
@@ -9,6 +7,10 @@ class Task(models.Model):
     name=models.CharField(max_length=255)
     description=models.TextField()
     grade=models.CharField(max_length=255,choices=GRADE_CHOICES)
+    status=models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     
     def __str__(self):
         return self.name
