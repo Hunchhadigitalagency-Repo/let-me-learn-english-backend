@@ -9,7 +9,9 @@ from user.serializers.student_serializers import (
     StudentLoginSerializer, 
     StudentResponseSerializer
 )
+from user.models import SchoolStudentParent
 import random
+from rest_framework import status
 import string
 from user.serializers.auth_serializers import UserSerializer
 class StudentRegisterView(APIView):
@@ -68,3 +70,98 @@ class StudentLoginView(APIView):
 
         except User.DoesNotExist:
             return Response({"error": "Invalid login code"}, status=400)
+
+
+
+from user.serializers.student_serializers import StudentEditSerializer,StudentReadSerializer
+from utils.paginator import CustomPageNumberPagination
+class StudentEditView(APIView):
+    
+    def get(self, request, student_id=None):
+        school_user = request.user
+
+        # 🔹 RETRIEVE single student
+        if student_id:
+            link = SchoolStudentParent.objects.filter(
+                student__id=student_id,
+                school__user=school_user
+            ).first()
+
+            if not link:
+                return Response(
+                    {"error": "Student not found or not linked to your school"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            serializer = StudentReadSerializer(
+                link.student,
+                context={'request': request}
+            )
+            return Response(
+                {"student": serializer.data},
+                status=status.HTTP_200_OK
+            )
+
+        # 🔹 LIST students (school-wise, paginated)
+        links = SchoolStudentParent.objects.filter(
+            school__user=school_user
+        ).select_related('student')
+
+        students = [link.student for link in links]
+
+        paginator = CustomPageNumberPagination()
+        page = paginator.paginate_queryset(students, request)
+
+        serializer = StudentReadSerializer(
+            page,
+            many=True,
+            context={'request': request}
+        )
+
+        return paginator.get_paginated_response({
+            "message": "Students fetched successfully",
+            "students": serializer.data
+        })
+   
+
+    def patch(self, request, student_id):
+        
+        school_user = request.user
+        link = SchoolStudentParent.objects.filter(student__id=student_id, school__user=school_user).first()
+        if not link:
+            return Response({"error": "Student not found or not linked to your school"}, status=status.HTTP_404_NOT_FOUND)
+
+        student = link.student
+        serializer = StudentEditSerializer(student, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Student updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, student_id):
+        school_user = request.user
+
+        # Find the link between student and school
+        link = SchoolStudentParent.objects.filter(
+            student__id=student_id,
+            school__user=school_user
+        ).first()
+
+        if not link:
+            return Response(
+                {"error": "Student not found or not linked to your school"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        student = link.student
+
+        # Delete the SchoolStudentParent link first
+        link.delete()
+
+        # Optionally, delete the student user completely
+        student.delete()
+
+        return Response(
+            {"message": "Student deleted successfully"},
+            status=status.HTTP_200_OK
+        )

@@ -6,6 +6,7 @@ from user.models import User
 from rest_framework import serializers
 from user.models import User, UserProfile
 import random
+from utils.urlsfixer import build_https_url
 import string
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -130,3 +131,89 @@ class StudentResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'login_code']
+
+
+from rest_framework import serializers
+from user.models import User, UserProfile, SchoolStudentParent, School
+
+class StudentEditSerializer(serializers.ModelSerializer):
+    
+    profile_picture = serializers.ImageField(required=False)
+    phone_number = serializers.CharField(required=False)
+    address = serializers.CharField(required=False)
+    grade = serializers.CharField(required=False)
+    section = serializers.CharField(required=False)
+    dateofbirth = serializers.DateField(required=False)
+    student_parent_name = serializers.CharField(required=False)
+    student_parent_phone_number = serializers.CharField(required=False)
+    student_parent_email = serializers.EmailField(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            "name", "email", "profile_picture", "phone_number", "address", "grade",
+            "section", "dateofbirth", "student_parent_name", "student_parent_phone_number",
+            "student_parent_email"
+        ]
+        extra_kwargs = {
+            "email": {"required": False},
+            "name": {"required": False}
+        }
+
+    def update(self, instance, validated_data):
+        
+        instance.name = validated_data.get("name", instance.name)
+        instance.email = validated_data.get("email", instance.email)
+        instance.save()
+
+       
+        profile = UserProfile.objects.filter(user=instance).first()
+        if profile:
+            profile.profile_picture = validated_data.get("profile_picture", profile.profile_picture)
+            profile.phone_number = validated_data.get("phone_number", profile.phone_number)
+            profile.address = validated_data.get("address", profile.address)
+            profile.grade = validated_data.get("grade", profile.grade)
+            profile.section = validated_data.get("section", profile.section)
+            profile.dateofbirth = validated_data.get("dateofbirth", profile.dateofbirth)
+            profile.student_parent_name = validated_data.get("student_parent_name", profile.student_parent_name)
+            profile.student_parent_phone_number = validated_data.get("student_parent_phone_number", profile.student_parent_phone_number)
+            profile.student_parent_email = validated_data.get("student_parent_email", profile.student_parent_email)
+            profile.save()
+
+        return instance
+
+
+
+class StudentReadSerializer(serializers.ModelSerializer):
+    # Nested profile fields
+    profile_picture = serializers.SerializerMethodField()
+    phone_number = serializers.CharField(source='userprofile.phone_number', read_only=True)
+    address = serializers.CharField(source='userprofile.address', read_only=True)
+    grade = serializers.CharField(source='userprofile.grade', read_only=True)
+    section = serializers.CharField(source='userprofile.section', read_only=True)
+    dateofbirth = serializers.DateTimeField(source='userprofile.dateofbirth', read_only=True)
+
+    student_parent_name = serializers.CharField(source='userprofile.student_parent_name', read_only=True)
+    student_parent_phone_number = serializers.CharField(source='userprofile.student_parent_phone_number', read_only=True)
+    student_parent_email = serializers.CharField(source='userprofile.student_parent_email', read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'name', 'email', 'login_code', 
+            'profile_picture', 'phone_number', 'address', 'grade', 'section',
+            'dateofbirth', 'student_parent_name', 'student_parent_phone_number', 'student_parent_email'
+        ]
+        read_only_fields = ['login_code']
+        
+        
+    def get_profile_picture(self, obj):
+        request = self.context.get('request')
+        profile = getattr(obj, 'userprofile', None)
+
+        if profile and profile.profile_picture:
+            if request:
+                return build_https_url(request,profile.profile_picture.url)
+            return profile.profile_picture.url
+
+        return None
