@@ -230,9 +230,9 @@ class RegisterSerializer(serializers.Serializer):
         UserProfile.objects.create(user=user,user_type='school')
 
        
-        serializer = UserSerializer(user,context=self.context)
+       
 
-        return serializer.data
+        return user
     
 class AdminRegisterSerializer(serializers.Serializer):
     # User fields

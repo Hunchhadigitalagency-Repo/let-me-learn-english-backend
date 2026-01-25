@@ -768,26 +768,21 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            user = serializer.save()  # creates user and profile
+            user_instance = serializer.save()  # this is now the User instance
 
-            # Get user instance
-            user_instance = User.objects.get(email=user['email'])
-
-            # Generate JWT tokens
             refresh = RefreshToken.for_user(user_instance)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            
-           
+
             verify_url = f"{settings.DOMAIN_NAME}/api/v1/email-verify/{access_token}/"
+            send_verification_email(user_instance.id, verify_url)
 
-            
-            send_verification_email( user_instance.id,verify_url)
-               
-
-            # Return user data + tokens
             response_data = {
-                'user': user,
+                'user': {
+                    'id': user_instance.id,
+                    'email': user_instance.email,
+                    'username': user_instance.username
+                },
                 'access': access_token,
                 'refresh': refresh_token
             }
