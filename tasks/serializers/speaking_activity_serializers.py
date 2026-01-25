@@ -25,6 +25,7 @@ class SpeakingActivityCreateSerializer(serializers.ModelSerializer):
 class SpeakingActivityListSerializer(serializers.ModelSerializer):
     samples = serializers.SerializerMethodField()
     task = serializers.SerializerMethodField()  # show task name
+    duration = serializers.SerializerMethodField()
 
     class Meta:
         model = SpeakingActivity
@@ -45,6 +46,8 @@ class SpeakingActivityListSerializer(serializers.ModelSerializer):
                 'name': obj.task.name
             }
         return None
+    def get_duration(self, obj):
+        return float(obj.duration) if obj.duration is not None else None
 
     def get_samples(self, obj):
         request = self.context.get('request')
