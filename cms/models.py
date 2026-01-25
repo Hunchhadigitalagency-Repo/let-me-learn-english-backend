@@ -71,3 +71,19 @@ class NowKnowIt(models.Model):
     natural_english=models.CharField(max_length=255)
     reason=models.TextField()
     is_active=models.BooleanField(default=True)
+    
+    
+    
+class Videos(models.Model):
+    video = models.FileField(upload_to='videos/')
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    
+class ExpandVocab(models.Model):
+  
+    word=models.CharField(max_length=255)
+    answer=models.CharField(max_length=255)
+    is_active=models.BooleanField(default=False)
+    grade=models.CharField(max_length=255)
