@@ -17,7 +17,7 @@ from rest_framework_simplejwt.views import (
 from user.viewsets.auth_views import LoginView,  VerifyResetView, ResetPasswordView,UserProfileUpdateView,LogoutView,ChangePasswordView,RegisterView ,VerifyEmailView,DisableAccountAPIView,DeleteAccountAPIView,ForgotPasswordView
 from django.urls import path, include
 
-from user.viewsets.student_views import StudentRegisterView,StudentLoginView
+from user.viewsets.student_views import StudentRegisterView,StudentLoginView,StudentEditView
 from user.viewsets.school_views import SchoolGoogleLoginView,SchoolViewSet
 # user_profile_list = UserWithProfileViewSet.as_view({'get': 'list'})
 
@@ -85,6 +85,10 @@ urlpatterns = [
     
    
     # path('auth/school-register/',SchoolRegistrationView.as_view(),name='school-register'),
+    path('school-student-edit/', StudentEditView.as_view(), name='student-edit'),
+    
+    path('school-student-edit/<int:student_id>/', StudentEditView.as_view(), name='student-edit'),
+    
    
    
 
