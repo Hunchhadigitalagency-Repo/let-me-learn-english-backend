@@ -9,7 +9,7 @@ from cms.serializers.blogcategory_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from rest_framework.decorators import action
 
 class BlogCategoryViewSet(viewsets.ViewSet):
 
@@ -176,3 +176,20 @@ class BlogCategoryViewSet(viewsets.ViewSet):
             {"message": "Blog category deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+
+        
+    @swagger_auto_schema(
+        operation_description="Get blog categories for dropdown (no pagination)",
+        responses={200: BlogCategoryListSerializer(many=True)}
+    )   
+    @action(detail=False, methods=["get"], url_path="dropdown")
+    def dropdown(self, request):
+        queryset = self.get_queryset().order_by("name")  # better UX
+
+        serializer = BlogCategoryListSerializer(
+            queryset,
+            many=True,
+            context={"request": request}
+        )
+
+        return Response({serializer.data})
