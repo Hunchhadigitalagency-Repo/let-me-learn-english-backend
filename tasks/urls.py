@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from tasks.viewsets.nested_tasks_Viewsets import IELTSTaskViewSet
 from tasks.viewsets.speaking_activity_views import SpeakingActivityViewSet
 from tasks.viewsets.tasks_views import TaskViewSet
 from tasks.viewsets.speaking_activity_sample_views import SpeakingActivitySampleViewSet
@@ -24,6 +25,7 @@ router.register(r'reading-activity-questions', ReadingActivityQuestionViewSet, b
 router.register(r'listening-activities', ListeningActivityViewSet, basename='listening-activities')
 router.register(r'listening-activity-questions', ListeningActivityQuestionViewSet, basename='listening-activity-questions')
 router.register(r'writing-activities', WritingActivityViewSet, basename='writing-activities')
+router.register(r'nested-tasks', IELTSTaskViewSet, basename='nested-tasks')
 
 # Use router.urls in urlpatterns
 urlpatterns = [

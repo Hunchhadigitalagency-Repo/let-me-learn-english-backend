@@ -85,7 +85,7 @@ class ReadingAcitivityQuestion(models.Model):
 class ListeningActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     title=models.CharField(max_length=255)
-    duration=models.DecimalField(max_digits=5, decimal_places=2)
+    duration=models.CharField(max_length=255, null=True, blank=True)
     instruction=models.TextField()
     audio_file=models.FileField(upload_to='listening_file/',null=True,blank=True)
     

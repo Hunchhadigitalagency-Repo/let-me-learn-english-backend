@@ -71,6 +71,8 @@ class NowKnowIt(models.Model):
     natural_english=models.CharField(max_length=255)
     reason=models.TextField()
     is_active=models.BooleanField(default=True)
+    used_status=models.BooleanField(default=False)
+    forced_publish = models.BooleanField(default=False)
     
     
     

@@ -10,6 +10,8 @@ class NowKnowItSerializer(serializers.ModelSerializer):
             'common_nepali_english',
             'natural_english',
             'reason',
+            'forced_publish',
+            'used_status',
             'is_active'
         ]
         read_only_fields = ['id']
