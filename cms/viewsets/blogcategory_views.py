@@ -179,17 +179,21 @@ class BlogCategoryViewSet(viewsets.ViewSet):
 
         
     @swagger_auto_schema(
-        operation_description="Get blog categories for dropdown (no pagination)",
-        responses={200: BlogCategoryListSerializer(many=True)}
-    )   
+        operation_description="Get active blog categories for dropdown (no pagination)",
+        responses={200: "OK"}
+    )
     @action(detail=False, methods=["get"], url_path="dropdown")
     def dropdown(self, request):
-        queryset = self.get_queryset().order_by("name")  # better UX
-
-        serializer = BlogCategoryListSerializer(
-            queryset,
-            many=True,
-            context={"request": request}
+        queryset = (
+            self.get_queryset()
+            .filter(is_active=True)
+            .order_by("name")
         )
 
-        return Response({serializer.data})
+        data = list(
+            queryset.values("id", "name")
+        )
+
+        return Response(data)
+
+
