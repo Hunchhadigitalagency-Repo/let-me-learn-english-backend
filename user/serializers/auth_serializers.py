@@ -319,3 +319,143 @@ class AdminRegisterSerializer(serializers.Serializer):
         return serializer.data
 
 
+
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.contrib.auth.password_validation import validate_password
+
+from user.models import UserProfile
+
+User = get_user_model()
+
+
+class UserUpsertSerializer(serializers.ModelSerializer):
+    """
+    Write serializer: creates/updates User + UserProfile in one request.
+    Accepts ANY field from User + UserProfile.
+    """
+
+    # ---- User fields ----
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    is_active = serializers.BooleanField(required=False)
+    login_code = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
+
+    # ---- Profile fields ----
+    bio = serializers.CharField(required=False, allow_blank=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    display_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    user_type = serializers.ChoiceField(
+        choices=[("superadmin","superadmin"),("admin","admin"),("parent","parent"),("student","student"),("school","school")],
+        required=False,
+        allow_null=True
+    )
+    is_verified = serializers.BooleanField(required=False)
+    is_disabled = serializers.BooleanField(required=False)
+    is_deleted = serializers.BooleanField(required=False)
+
+    google_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    google_avatar = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+
+    grade = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    section = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    dateofbirth = serializers.DateTimeField(required=False, allow_null=True)
+
+    student_parent_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    student_parent_email = serializers.EmailField(required=False, allow_null=True)
+    student_parent_phone_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = [
+            # User
+            "id", "email", "username", "first_name", "last_name", "is_active", "login_code", "name", "password",
+            # Profile
+            "bio", "profile_picture", "display_name", "phone_number", "address", "user_type",
+            "is_verified", "is_disabled", "is_deleted",
+            "google_id", "google_avatar",
+            "grade", "section", "dateofbirth",
+            "student_parent_name", "student_parent_email", "student_parent_phone_number",
+        ]
+        read_only_fields = ["id"]
+
+    def validate(self, attrs):
+        # If creating, ensure required minimal identity
+        if self.instance is None:
+            if not attrs.get("email"):
+                raise serializers.ValidationError({"email": "email is required"})
+            # username can default to email
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+
+        # Split profile fields
+        profile_fields = {
+            k: validated_data.pop(k)
+            for k in list(validated_data.keys())
+            if k in {
+                "bio","profile_picture","display_name","phone_number","address","user_type",
+                "is_verified","is_disabled","is_deleted",
+                "google_id","google_avatar",
+                "grade","section","dateofbirth",
+                "student_parent_name","student_parent_email","student_parent_phone_number"
+            }
+        }
+
+        email = validated_data.get("email")
+        if not validated_data.get("username"):
+            validated_data["username"] = email
+
+        user = User.objects.create(**validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save(update_fields=["password"])
+
+        UserProfile.objects.create(user=user, **profile_fields)
+        return user
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+
+        # profile data
+        profile_data = {}
+        profile_field_names = {
+            "bio","profile_picture","display_name","phone_number","address","user_type",
+            "is_verified","is_disabled","is_deleted",
+            "google_id","google_avatar",
+            "grade","section","dateofbirth",
+            "student_parent_name","student_parent_email","student_parent_phone_number"
+        }
+        for k in list(validated_data.keys()):
+            if k in profile_field_names:
+                profile_data[k] = validated_data.pop(k)
+
+        # update user fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+
+        # update/create profile
+        profile, _ = UserProfile.objects.get_or_create(user=instance)
+        for attr, value in profile_data.items():
+            setattr(profile, attr, value)
+        profile.save()
+
+        return instance
