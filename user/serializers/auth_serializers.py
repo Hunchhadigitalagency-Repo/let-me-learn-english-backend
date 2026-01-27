@@ -58,9 +58,26 @@ class UserSerializer(serializers.ModelSerializer):
             return {
                 "bio": profile.bio,
                 "profile_picture": avatar_url,
+                "display_name": profile.display_name,
+                "phone_number": profile.phone_number,
+                "address": profile.address,
                 "user_type": profile.user_type,
-                "address": profile.address
+
+                "is_verified": profile.is_verified,
+                "is_disabled": profile.is_disabled,
+                "is_deleted": profile.is_deleted,
+
+                "google_id": profile.google_id,
+                "google_avatar": profile.google_avatar,
+
+                # "grade": profile.grade,
+                # "section": profile.section,
+                # "dateofbirth": profile.dateofbirth,
+                # "student_parent_name": profile.student_parent_name,
+                # "student_parent_email": profile.student_parent_email,
+                # "student_parent_phone_number": profile.student_parent_phone_number,
             }
+
         except UserProfile.DoesNotExist:
             return None
         
