@@ -367,13 +367,58 @@ from utils.urlsfixer import build_https_url
 
 class SchoolListSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
+    focal_person = serializers.SerializerMethodField()
+    subscription_expiry_date = serializers.SerializerMethodField()
+    subscription_status = serializers.SerializerMethodField()
 
     class Meta:
         model = School
-        fields = ("id", "name", "email", "city", "address", "code", "logo_url")
+        fields = (
+            "id",
+            "name",
+            "email",
+            "city",
+            "address",
+            "code",
+            "logo_url",
+            "focal_person",
+            "subscription_expiry_date",
+            "subscription_status",
+        )
 
+    # ---------- logo ----------
     def get_logo_url(self, obj):
         request = self.context.get("request")
         if obj.logo:
             return build_https_url(request, obj.logo.url)
         return None
+
+    # ---------- focal person ----------
+    def get_focal_person(self, obj):
+        focal = FocalPerson.objects.filter(school=obj).first()
+        if not focal:
+            return None
+        return {
+            "name": focal.name,
+            "email": focal.email,
+            "phone": focal.phone,
+            "designation": focal.designation,
+        }
+
+    # ---------- subscription ----------
+    def _get_latest_subscription(self, obj):
+        return (
+            SubscriptionHistory.objects
+            .filter(school=obj)
+            .order_by("-start_date")
+            .only("end_date", "status")
+            .first()
+        )
+
+    def get_subscription_expiry_date(self, obj):
+        sub = self._get_latest_subscription(obj)
+        return sub.end_date if sub else None
+
+    def get_subscription_status(self, obj):
+        sub = self._get_latest_subscription(obj)
+        return sub.status if sub else None
