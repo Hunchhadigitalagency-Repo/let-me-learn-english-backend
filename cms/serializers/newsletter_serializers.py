@@ -7,6 +7,7 @@ from user.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
+        ref_name = "NewsletterUserSerializer"
         fields = ['id', 'name', 'email']  # Include any other fields you need
 class NewsletterCreateSerializer(serializers.ModelSerializer):
     class Meta:
