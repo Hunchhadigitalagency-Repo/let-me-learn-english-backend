@@ -768,7 +768,7 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            user_instance = serializer.save()  # this is now the User instance
+            user_instance = serializer.save()  
 
             refresh = RefreshToken.for_user(user_instance)
             access_token = str(refresh.access_token)
@@ -778,13 +778,9 @@ class RegisterView(APIView):
             send_verification_email(user_instance.id, verify_url)
 
             response_data = {
-                'user': {
-                    'id': user_instance.id,
-                    'email': user_instance.email,
-                    'username': user_instance.username
-                },
+                'user': UserSerializer(user_instance, context={'request': request}).data,
                 'access': access_token,
-                'refresh': refresh_token
+                'refresh': refresh_token,
             }
 
             return Response(response_data, status=status.HTTP_201_CREATED)

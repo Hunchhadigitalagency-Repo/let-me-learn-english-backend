@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (
 # =========================
 # ViewSets
 # =========================
-from user.serializers.user_management_views import UserDropdownAPIView
+from user.viewsets.user_management_views import UserDropdownAPIView, UserViewSet
 from user.viewsets.address_views import (
     CountryViewSet,
     ProvinceViewSet,
@@ -52,6 +52,7 @@ router.register(r'countries', CountryViewSet, basename='countries')
 router.register(r'provinces', ProvinceViewSet, basename='provinces')
 router.register(r'districts', DistrictViewSet, basename='districts')
 router.register(r'schools', SchoolViewSet, basename='schools')
+router.register(r'user-management', UserViewSet, basename='user-management')
 
 # =========================
 # URL Patterns
