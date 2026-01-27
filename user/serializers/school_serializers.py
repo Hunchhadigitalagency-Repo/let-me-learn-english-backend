@@ -233,3 +233,147 @@ class SchoolBasicSerializer(serializers.ModelSerializer):
             'city',
             'address',
         ]
+
+
+class FocalPersonGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FocalPerson
+        fields = ("id", "name", "email", "phone", "designation")
+
+
+from rest_framework import serializers
+from django.db.models import Count
+from utils.urlsfixer import build_https_url
+
+from user.models import School, FocalPerson, SchoolStudentParent
+from school.models import SubscriptionHistory
+
+from school.serializers.subscription_serializers import SubscriptionHistoryListSerializer
+# ^ adjust import path to your actual file
+# It already nests `logs = SubscriptionLogSerializer(many=True)` in your code.
+
+from user.serializers.school_serializers import SchoolBasicSerializer  # optional
+from user.serializers.school_serializers import FocalPersonGetSerializer  # if you place it there
+
+
+class SchoolGetSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+
+    country = serializers.SerializerMethodField()
+    province = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+
+    focal_person = serializers.SerializerMethodField()
+
+    # subscription histories (each includes nested logs via SubscriptionHistoryListSerializer)
+    subscriptions = serializers.SerializerMethodField()
+
+    # counts
+    student_count = serializers.SerializerMethodField()
+    parent_count = serializers.SerializerMethodField()
+    relation_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = School
+        fields = (
+            "id",
+            "name",
+            "code",
+            "establish_date",
+            "landline",
+            "email",
+            "country",
+            "province",
+            "district",
+            "city",
+            "address",
+            "logo_url",
+            "created_at",
+            "updated_at",
+
+            "focal_person",
+
+            "student_count",
+            "parent_count",
+            "relation_count",
+
+            "subscriptions",
+        )
+
+    # ---------- base computed fields ----------
+    def get_logo_url(self, obj):
+        request = self.context.get("request")
+        if obj.logo:
+            return build_https_url(request, obj.logo.url)
+        return None
+
+    def get_country(self, obj):
+        return obj.country.name if obj.country else None
+
+    def get_province(self, obj):
+        return obj.province.name if obj.province else None
+
+    def get_district(self, obj):
+        return obj.district.name if obj.district else None
+
+    # ---------- focal person ----------
+    def get_focal_person(self, obj):
+        focal = getattr(obj, "prefetched_focal_person", None)
+        if focal is None:
+            focal = FocalPerson.objects.filter(school=obj).first()
+        if not focal:
+            return None
+        return FocalPersonGetSerializer(focal, context=self.context).data
+
+    # ---------- subscriptions ----------
+    def get_subscriptions(self, obj):
+        qs = getattr(obj, "prefetched_subscriptions", None)
+        if qs is None:
+            qs = (
+                SubscriptionHistory.objects
+                .filter(school=obj)
+                .prefetch_related("logs")
+                .order_by("-start_date")
+            )
+        return SubscriptionHistoryListSerializer(qs, many=True, context=self.context).data
+
+    # ---------- counts ----------
+    def get_student_count(self, obj):
+        # uses distinct to avoid duplicates
+        return (
+            SchoolStudentParent.objects
+            .filter(school=obj)
+            .values("student")
+            .distinct()
+            .count()
+        )
+
+    def get_parent_count(self, obj):
+        return (
+            SchoolStudentParent.objects
+            .filter(school=obj)
+            .values("parent")
+            .distinct()
+            .count()
+        )
+
+    def get_relation_count(self, obj):
+        return SchoolStudentParent.objects.filter(school=obj).count()
+
+
+from rest_framework import serializers
+from user.models import School
+from utils.urlsfixer import build_https_url
+
+class SchoolListSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = School
+        fields = ("id", "name", "email", "city", "address", "code", "logo_url")
+
+    def get_logo_url(self, obj):
+        request = self.context.get("request")
+        if obj.logo:
+            return build_https_url(request, obj.logo.url)
+        return None
