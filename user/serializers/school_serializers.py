@@ -248,7 +248,6 @@ from utils.urlsfixer import build_https_url
 from user.models import School, FocalPerson, SchoolStudentParent
 from school.models import SubscriptionHistory
 
-from school.serializers.subscription_serializers import SubscriptionHistoryListSerializer
 # ^ adjust import path to your actual file
 # It already nests `logs = SubscriptionLogSerializer(many=True)` in your code.
 
@@ -327,6 +326,7 @@ class SchoolGetSerializer(serializers.ModelSerializer):
 
     # ---------- subscriptions ----------
     def get_subscriptions(self, obj):
+        from school.serializers.subscriptions_serializers import SubscriptionHistoryListSerializer
         qs = getattr(obj, "prefetched_subscriptions", None)
         if qs is None:
             qs = (
