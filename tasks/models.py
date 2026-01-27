@@ -8,7 +8,6 @@ class Task(models.Model):
     description=models.TextField()
     grade=models.CharField(max_length=255,choices=GRADE_CHOICES)
     status=models.BooleanField(default=True)
-
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
     
@@ -19,8 +18,7 @@ class Task(models.Model):
 class SpeakingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     title=models.CharField(max_length=255)
-    duration=models.DecimalField(max_digits=5, decimal_places=2,null=True,blank=True)
-
+    duration=models.CharField(max_length=255,null=True,blank=True)
     instructions=models.TextField()
     use_default_instruction=models.BooleanField(default=True)
     
@@ -46,7 +44,7 @@ class SpeakingActivityQuestion(models.Model):
     speaking_activity=models.ForeignKey(SpeakingActivity,on_delete=models.CASCADE,null=True,blank=True)
     type=models.CharField(max_length=255,choices=SPEAKING_CHOICES)
     attachment=models.FileField(upload_to='question_attachment/',null=True,blank=True)
-    durations=models.DecimalField(max_digits=5, decimal_places=2)   
+    durations=models.CharField(max_length=255,null=True,blank=True)   
     text_question=models.CharField(max_length=255,null=True,blank=True) 
     
     def __str__(self):
@@ -55,7 +53,7 @@ class SpeakingActivityQuestion(models.Model):
     
 class ReadingActivity(models.Model):
     title=models.CharField(max_length=255)
-    duration=models.DecimalField(max_digits=5,decimal_places=2)
+    duration=models.CharField(max_length=255,null=True,blank=True)
     passage=models.TextField()
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     
@@ -117,7 +115,7 @@ class ListeningActivityQuestion(models.Model):
 class WritingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     title=models.CharField(max_length=255)
-    duration=models.DecimalField(max_digits=5, decimal_places=2)
+    duration=models.CharField(max_length=255,null=True,blank=True)
     instruction=models.TextField()
     writing_sample=models.CharField(max_length=255)
     
