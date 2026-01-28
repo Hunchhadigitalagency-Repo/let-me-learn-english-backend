@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'school',
     'cms',
     'student',
+    'master_settings',
 
 ]
 
