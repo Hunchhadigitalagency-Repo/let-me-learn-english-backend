@@ -10,6 +10,8 @@ from school.serializers.subscriptions_serializers import (
     SubscriptionHistoryCreateSerializer,
     SubscriptionHistoryListSerializer
 )
+from utils.paginator import CustomPageNumberPagination
+from django.db.models import Q
 
 # ----------------------------
 # Swagger query params (Admin - School Subscription)
@@ -94,6 +96,13 @@ PAGE = openapi.Parameter(
     type=openapi.TYPE_INTEGER,
     required=False,
 )
+PAGE_SIZE = openapi.Parameter(
+    name="page_size",
+    in_=openapi.IN_QUERY,
+    description="Optional page size (if supported by CustomPageNumberPagination).",
+    type=openapi.TYPE_INTEGER,
+    required=False,
+)
 
 
 class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
@@ -107,6 +116,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     queryset = SubscriptionHistory.objects.all().select_related("school").prefetch_related("logs")
+    pagination_class = CustomPageNumberPagination   
     lookup_field = "pk"
 
     def get_serializer_class(self):
@@ -240,7 +250,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
         ),
         manual_parameters=[
             ADMIN_SCHOOL_ID, ADMIN_STATUS, ADMIN_PAYMENT_MODE, ADMIN_PACKAGE,
-            ADMIN_START_DATE, ADMIN_END_DATE, ADMIN_SEARCH, ADMIN_ORDERING, PAGE
+            ADMIN_START_DATE, ADMIN_END_DATE, ADMIN_SEARCH, ADMIN_ORDERING, PAGE, PAGE_SIZE
         ],
         responses={200: SubscriptionHistoryListSerializer(many=True)}
     )

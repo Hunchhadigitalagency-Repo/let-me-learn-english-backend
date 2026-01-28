@@ -224,6 +224,8 @@ from rest_framework import serializers
 from user.models import School
 
 class SchoolBasicSerializer(serializers.ModelSerializer):
+    logo = serializers.SerializerMethodField()
+
     class Meta:
         model = School
         fields = [
@@ -232,7 +234,13 @@ class SchoolBasicSerializer(serializers.ModelSerializer):
             'email',
             'city',
             'address',
+            'logo',
         ]
+    def get_logo(self, obj):
+        request = self.context.get('request')
+        if obj.logo:
+            return build_https_url(request, obj.logo.url)  
+        return None
 
 
 class FocalPersonGetSerializer(serializers.ModelSerializer):
@@ -251,7 +259,6 @@ from school.models import SubscriptionHistory
 # ^ adjust import path to your actual file
 # It already nests `logs = SubscriptionLogSerializer(many=True)` in your code.
 
-from user.serializers.school_serializers import SchoolBasicSerializer  # optional
 from user.serializers.school_serializers import FocalPersonGetSerializer  # if you place it there
 
 
