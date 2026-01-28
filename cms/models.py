@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 from django.conf import settings
 # Create your models here.
@@ -73,6 +74,12 @@ class NowKnowIt(models.Model):
     is_active=models.BooleanField(default=True)
     used_status=models.BooleanField(default=False)
     forced_publish = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.common_nepali_english
     
     
     
@@ -89,3 +96,12 @@ class ExpandVocab(models.Model):
     answer=models.CharField(max_length=255)
     is_active=models.BooleanField(default=False)
     grade=models.CharField(max_length=255)
+    is_active=models.BooleanField(default=True)
+    used_status=models.BooleanField(default=False)
+    forced_publish = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.word

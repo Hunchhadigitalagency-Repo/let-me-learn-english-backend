@@ -11,6 +11,7 @@ click-repl==0.3.0
 Django==5.2.7
 django-allauth==65.13.1
 django-cors-headers==4.3.0
+django-filter==25.2
 django-picklefield==3.4.0
 django-q2==1.8.0
 django-redis==6.0.0
