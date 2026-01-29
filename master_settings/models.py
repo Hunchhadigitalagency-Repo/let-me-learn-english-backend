@@ -36,4 +36,19 @@ class TermsandConditions(models.Model):
     
     def __str__(self):
         return self.topic
+from user.models import School
+class ExamPause(models.Model):
+    school = models.ForeignKey(
+        School,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    grade = models.CharField(max_length=50)
+    mark_all_grade = models.BooleanField(default=True)
+    is_active=models.BooleanField(default=True)
 
+    def __str__(self):
+        return f"Exam Pause ({self.grade})"

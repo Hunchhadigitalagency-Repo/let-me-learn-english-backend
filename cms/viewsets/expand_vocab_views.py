@@ -13,9 +13,7 @@ from utils.paginator import CustomPageNumberPagination
 
 
 class ExpandVocabViewSet(ModelViewSet):
-    """
-    Admin Expand Vocab CRUD APIs
-    """
+    
     queryset = ExpandVocab.objects.all().order_by('word')
     serializer_class = ExpandVocabSerializer
     permission_classes = [IsAuthenticated]
