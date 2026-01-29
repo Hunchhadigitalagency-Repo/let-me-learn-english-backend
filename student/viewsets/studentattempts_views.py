@@ -7,11 +7,10 @@ from student.serializers.studentattempts_serializers import StudentAttemptsCreat
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
 class StudentAttemptsViewSet(viewsets.ViewSet):
-    
+    permission_classes = [IsAuthenticated]
    
-   
-
     
     def list(self, request):
         queryset = StudentAttempts.objects.all().order_by('-started_at')

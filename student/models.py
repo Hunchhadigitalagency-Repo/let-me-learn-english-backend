@@ -21,6 +21,10 @@ class StudentAttempts(models.Model):
     status = models.CharField(max_length=255)
     started_at = models.DateTimeField(auto_now_add=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
+
+
+    def __str__(self):
+        return f"Attempt by {self.student} on {self.task} - {self.activity_type}"
     
     
     
