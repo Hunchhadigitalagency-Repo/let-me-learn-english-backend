@@ -39,6 +39,7 @@ class UserProfile(models.Model):
     is_deleted = models.BooleanField(default=False)
     google_id = models.CharField(max_length=255, blank=True, null=True)
     google_avatar = models.URLField(blank=True, null=True)
+    is_active=models.BooleanField(default=True)
     
     grade=models.CharField(max_length=255,null=True,blank=True)
     section=models.CharField(max_length=255,null=True,blank=True)
