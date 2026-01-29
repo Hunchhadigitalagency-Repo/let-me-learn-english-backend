@@ -5,26 +5,37 @@ from cms.serializers.knowit_serializers import NowKnowItSerializer
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+class NowKnowItViewSet(viewsets.ModelViewSet):
+    
+    queryset = NowKnowIt.objects.all().order_by("-created_at")
+    serializer_class = NowKnowItSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
 
+    
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 
-class NowKnowItViewSet(viewsets.ViewSet):
-    """
-    CRUD API for NowKnowIt model.
-    """
+    
+    search_fields = ['common_nepali_english', 'natural_english', 'reason']
+
+    
+    filterset_fields = ['is_active', 'used_status', 'forced_publish', 'created_at', 'updated_at']
+
+   
+    ordering_fields = ['created_at', 'updated_at']
 
     # ---------------- LIST ----------------
     @swagger_auto_schema(
         operation_description="List all NowKnowIt items with pagination",
         responses={200: NowKnowItSerializer(many=True)}
     )
-    def list(self, request):
-        queryset = NowKnowIt.objects.all()
-
-        paginator = CustomPageNumberPagination()
-        page = paginator.paginate_queryset(queryset, request)
-
-        serializer = NowKnowItSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     # ---------------- RETRIEVE ----------------
     @swagger_auto_schema(

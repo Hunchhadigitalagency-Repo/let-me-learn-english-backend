@@ -9,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from user.serializers.auth_serializers import UserSerializer
 from user.models import User,UserProfile,School
 
+from django.utils import timezone
+from datetime import timedelta
 
 
 class SchoolGoogleLoginView(APIView):
@@ -260,6 +262,24 @@ class SchoolViewSet(viewsets.ModelViewSet):
             qs = qs.filter(subscriptionhistory__status__iexact=sub_status.strip())
 
         qs = qs.distinct()
+        
+        status_filter = params.get("status")
+        today = timezone.now().date()
+        if status_filter == "expiring_soon":
+            qs = qs.filter(
+                subscriptionhistory__end_date__lte=today + timedelta(days=7),
+                subscriptionhistory__end_date__gte=today
+            )
+        elif status_filter == "on_trial":
+            qs = qs.filter(subscriptionhistory__status__iexact="trial")
+
+        elif status_filter == "new":
+            qs.filter(subscriptionhistory__isnull=True).distinct()
+
+        elif status_filter == "expired":
+            qs = qs.filter(subscriptionhistory__end_date__lt=today)
+        elif status_filter == "deactivated":
+            qs = qs.filter(user__is_active=False)
 
         # ---- Ordering ----
         ordering = params.get("ordering", "-created_at")
@@ -273,6 +293,32 @@ class SchoolViewSet(viewsets.ModelViewSet):
         qs = qs.order_by(ordering)
 
         return qs
+    
+    
+
+
+    def get_counts(self):
+        """
+        Returns counts for different school categories
+        """
+        today = timezone.now().date()
+        qs = self.get_queryset()  # use self, not super
+
+        counts = {
+            "expiring_soon": qs.filter(
+                subscriptionhistory__end_date__lte=today + timedelta(days=7),
+                subscriptionhistory__end_date__gte=today
+            ).distinct().count(),
+             
+            "on_trial": qs.filter(subscriptionhistory__status__iexact="trial").distinct().count(),
+            "new": qs.filter(subscriptionhistory__isnull=True).distinct().count(),
+            "expired": qs.filter(subscriptionhistory__end_date__lt=today).distinct().count(),
+            "deactivated": qs.filter(user__is_active=False).distinct().count(),
+
+            "total": qs.count(),
+        }
+        return counts
+
 
     # ---------------- SERIALIZER ROUTING ----------------
     def get_serializer_class(self):
@@ -347,15 +393,19 @@ class SchoolViewSet(viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context={"request": request})
-            # ✅ return paginator response EXACTLY
-            return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(page, many=True, context={"request": request}) if page else self.get_serializer(queryset, many=True, context={"request": request})
+
+        response_data = {
+            "counts": self.get_counts(),
+            "results": serializer.data if page else serializer.data
+        }
+
+        if page:
+            return self.get_paginated_response(response_data)
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     # ---------------- RETRIEVE ----------------
     @swagger_auto_schema(
