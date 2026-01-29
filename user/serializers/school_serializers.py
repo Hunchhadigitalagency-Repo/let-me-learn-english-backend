@@ -222,9 +222,12 @@ class SchoolUpdateSerializer(serializers.ModelSerializer):
 
 from rest_framework import serializers
 from user.models import School
-
+from user.serializers.address_serializers import ProvinceSerializer,CountrySerializer,DistrictSerializer
 class SchoolBasicSerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()
+    country=CountrySerializer()
+    province=ProvinceSerializer()
+    district=DistrictSerializer()
 
     class Meta:
         model = School
@@ -235,6 +238,9 @@ class SchoolBasicSerializer(serializers.ModelSerializer):
             'city',
             'address',
             'logo',
+            'country',
+            'district',
+            'province',
         ]
     def get_logo(self, obj):
         request = self.context.get('request')
