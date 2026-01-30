@@ -12,6 +12,7 @@ from school.serializers.subscriptions_serializers import (
 )
 from utils.paginator import CustomPageNumberPagination
 from django.db.models import Q
+from django.db.models import Q, Count
 
 # ----------------------------
 # Swagger query params (Admin - School Subscription)
@@ -126,18 +127,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
 
     # ----------------------------
     # Filtering / Search / Ordering
-    
-    
     # ----------------------------
-    
-    def get_status_counts(self):
-        """
-        Returns counts of subscriptions per status (filtered queryset)
-        """
-        qs = self.get_queryset()
-        counts = qs.values("status").annotate(count=Count("id"))
-      
-        return {item["status"]: item["count"] for item in counts}
     def get_queryset(self):
         qs = super().get_queryset()
 
@@ -266,19 +256,33 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
         responses={200: SubscriptionHistoryListSerializer(many=True)}
     )
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True) if page else self.get_serializer(queryset, many=True)
+        qs = self.get_queryset()  # apply all filters, search, ordering
 
-        response_data = {
-            "status_summary": self.get_status_counts(),
-            "results": serializer.data
-        }
+        # Count paid and pending subscriptions
+        total_paid = qs.filter(status="paid").count()
+        total_pending = qs.filter(status="pending").count()
 
-        if page:
-            return self.get_paginated_response(response_data)
+        # Paginate the queryset
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response({
+                "subscriptions": serializer.data,
+                "counts": {
+                    "paid": total_paid,
+                    "pending": total_pending
+                }
+            })
 
-        return Response(response_data)
+        # If no pagination
+        serializer = self.get_serializer(qs, many=True)
+        return Response({
+            "subscriptions": serializer.data,
+            "counts": {
+                "paid": total_paid,
+                "pending": total_pending
+            }
+        })
 
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
