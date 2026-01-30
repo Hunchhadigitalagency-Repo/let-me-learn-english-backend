@@ -435,3 +435,14 @@ class SchoolListSerializer(serializers.ModelSerializer):
     def get_subscription_status(self, obj):
         sub = self._get_latest_subscription(obj)
         return sub.status if sub else None
+
+
+
+from rest_framework import serializers
+from user.models import School
+
+
+class SchoolDropdownSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ("id", "name")

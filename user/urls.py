@@ -43,6 +43,7 @@ from user.viewsets.student_views import (
     StudentLoginView,
     StudentEditView,
 )
+from user.viewsets.school_views import SchoolDropdownViewSet
 
 # =========================
 # Routers
@@ -53,6 +54,12 @@ router.register(r'provinces', ProvinceViewSet, basename='provinces')
 router.register(r'districts', DistrictViewSet, basename='districts')
 router.register(r'schools', SchoolViewSet, basename='schools')
 router.register(r'user-management', UserViewSet, basename='user-management')
+
+router.register(
+    r"schools-dropdown",
+    SchoolDropdownViewSet,
+    basename="schooldropdown"
+)
 
 # =========================
 # URL Patterns

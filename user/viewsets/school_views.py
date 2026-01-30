@@ -431,3 +431,9 @@ class SchoolViewSet(viewsets.ModelViewSet):
         school = get_object_or_404(self.get_queryset(), pk=kwargs.get("pk"))
         school.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+from user.serializers.school_serializers import SchoolDropdownSerializer
+class SchoolDropdownViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = School.objects.all().order_by("-id")
+    serializer_class = SchoolDropdownSerializer
