@@ -27,6 +27,7 @@ class TermsandConditions(models.Model):
     topic=models.CharField(max_length=255)
     description= models.TextField(blank=True)
     is_active=models.BooleanField(default=True)
+    effective_date=models.DateTimeField(null=True,blank=True)
     
     
     created_at = models.DateTimeField(auto_now_add=True,null=True)  # Add this
@@ -46,7 +47,7 @@ class ExamPause(models.Model):
     )
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    grade = models.CharField(max_length=50)
+    grade = models.CharField(max_length=50,null=True,blank=True)
     mark_all_grade = models.BooleanField(default=True)
     is_active=models.BooleanField(default=True)
 

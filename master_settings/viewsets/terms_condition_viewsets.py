@@ -7,7 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from master_settings.models import TermsandConditions
 from master_settings.serializers.terms_condition_serializers import TermsandConditionsSerializer
-from utils.permissions.admins.admin_perms_mixins import IsAdminUserType
+from utils.permissions import IsAdminUserType
 
 class TermsandConditionsViewSet(ViewSet):
     """

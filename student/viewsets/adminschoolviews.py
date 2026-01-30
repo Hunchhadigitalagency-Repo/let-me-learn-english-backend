@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from utils.permissions.admins.admin_perms_mixins import IsAdminUserType
+from utils.permissions import IsAdminUserType
 from user.models import School
 from user.serializers.school_serializers import SchoolBasicSerializer
 from django.db.models import Q  

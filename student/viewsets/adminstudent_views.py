@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from user.models import User
 from student.serializers.admin_student_serializers import StudentSerializer
-from utils.permissions.admins.admin_perms_mixins import IsAdminUserType
+from utils.permissions import IsAdminUserType
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 class StudentViewSet(viewsets.ViewSet):

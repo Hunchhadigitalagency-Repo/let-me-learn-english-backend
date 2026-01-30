@@ -12,6 +12,7 @@ from school.serializers.subscriptions_serializers import (
 )
 from utils.paginator import CustomPageNumberPagination
 from django.db.models import Q
+from django.db.models import Q, Count
 
 # ----------------------------
 # Swagger query params (Admin - School Subscription)
@@ -255,7 +256,33 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
         responses={200: SubscriptionHistoryListSerializer(many=True)}
     )
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        qs = self.get_queryset()  # apply all filters, search, ordering
+
+        # Count paid and pending subscriptions
+        total_paid = qs.filter(status="paid").count()
+        total_pending = qs.filter(status="pending").count()
+
+        # Paginate the queryset
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response({
+                "subscriptions": serializer.data,
+                "counts": {
+                    "paid": total_paid,
+                    "pending": total_pending
+                }
+            })
+
+        # If no pagination
+        serializer = self.get_serializer(qs, many=True)
+        return Response({
+            "subscriptions": serializer.data,
+            "counts": {
+                "paid": total_paid,
+                "pending": total_pending
+            }
+        })
 
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
