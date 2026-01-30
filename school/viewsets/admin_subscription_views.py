@@ -126,7 +126,18 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
 
     # ----------------------------
     # Filtering / Search / Ordering
+    
+    
     # ----------------------------
+    
+    def get_status_counts(self):
+        """
+        Returns counts of subscriptions per status (filtered queryset)
+        """
+        qs = self.get_queryset()
+        counts = qs.values("status").annotate(count=Count("id"))
+      
+        return {item["status"]: item["count"] for item in counts}
     def get_queryset(self):
         qs = super().get_queryset()
 
@@ -255,7 +266,19 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
         responses={200: SubscriptionHistoryListSerializer(many=True)}
     )
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True) if page else self.get_serializer(queryset, many=True)
+
+        response_data = {
+            "status_summary": self.get_status_counts(),
+            "results": serializer.data
+        }
+
+        if page:
+            return self.get_paginated_response(response_data)
+
+        return Response(response_data)
 
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],

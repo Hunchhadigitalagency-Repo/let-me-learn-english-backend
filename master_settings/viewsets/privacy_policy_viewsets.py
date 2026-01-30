@@ -9,7 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from master_settings.models import PrivacyPolicy
 from master_settings.serializers.privacy_policy_serializers import PrivacyPolicySerializer
-from utils.permissions.admins.admin_perms_mixins import IsAdminUserType
+from utils.permissions import IsAdminUserType
 
 class PrivacyPolicyViewSet(ViewSet):
    

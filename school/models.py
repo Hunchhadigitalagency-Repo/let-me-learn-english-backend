@@ -2,11 +2,10 @@ from django.db import models
 from user.models import School
 # Create your models here.
 class SubscriptionHistory(models.Model):
-    # STATUS_CHOICES = (
-    #     ("pending", "Pending"),
-    #     ("paid", "Paid"),
-    #     ("expired", "Expired"),
-    # )
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("paid", "Paid")
+    )
 
     PAYMENT_MODE_CHOICES = (
         ("cash", "Cash"),
