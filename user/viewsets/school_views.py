@@ -435,5 +435,36 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
 from user.serializers.school_serializers import SchoolDropdownSerializer
 class SchoolDropdownViewSet(viewsets.ReadOnlyModelViewSet):
+   
     queryset = School.objects.all().order_by("-id")
     serializer_class = SchoolDropdownSerializer
+
+    @swagger_auto_schema(
+        operation_summary="School dropdown",
+        operation_description="Returns a list of schools for dropdown selection (id and name only).",
+        responses={
+            200: openapi.Response(
+                description="List of schools",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            "id": openapi.Schema(
+                                type=openapi.TYPE_INTEGER,
+                                example=1
+                            ),
+                            "name": openapi.Schema(
+                                type=openapi.TYPE_STRING,
+                                example="Everest Secondary School"
+                            ),
+                        },
+                        required=["id", "name"],
+                    ),
+                ),
+            )
+        },
+        tags=["School"],
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
