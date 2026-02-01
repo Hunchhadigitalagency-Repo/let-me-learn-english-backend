@@ -13,6 +13,7 @@ from school.serializers.subscriptions_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from django.db.models import Q
 from django.db.models import Q, Count
+from utils.decorators import has_permission
 
 # ----------------------------
 # Swagger query params (Admin - School Subscription)
@@ -187,6 +188,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     # ----------------------------
     # Logging hooks
     # ----------------------------
+    
     def perform_create(self, serializer):
         """
         Admin must pass school in request body (school id).
@@ -202,7 +204,8 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
             new_payment_mode=subscription.payment_mode,
             remarks=subscription.remarks or "Subscription created by admin"
         )
-
+        
+   
     def perform_update(self, serializer):
         """
         Creates SubscriptionLog capturing old vs new values.
@@ -232,6 +235,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     # ----------------------------
     # Swagger docs (CRUD)
     # ----------------------------
+    @has_permission("can_read_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="List subscriptions (admin)",
@@ -256,11 +260,11 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
         responses={200: SubscriptionHistoryListSerializer(many=True)}
     )
     def list(self, request, *args, **kwargs):
-        qs = self.get_queryset()  # apply all filters, search, ordering
+        qs = self.get_queryset()  # filtered queryset for pagination/response
 
-        # Count paid and pending subscriptions
-        total_paid = qs.filter(status="paid").count()
-        total_pending = qs.filter(status="pending").count()
+        # Global counts (ignore filters)
+        total_paid = SubscriptionHistory.objects.filter(status="paid").count()
+        total_pending = SubscriptionHistory.objects.filter(status="pending").count()
 
         # Paginate the queryset
         page = self.paginate_queryset(qs)
@@ -274,7 +278,6 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
                 }
             })
 
-        # If no pagination
         serializer = self.get_serializer(qs, many=True)
         return Response({
             "subscriptions": serializer.data,
@@ -284,6 +287,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
             }
         })
 
+    @has_permission("can_read_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="Retrieve subscription (admin)",
@@ -292,7 +296,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
-
+    @has_permission("can_write_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="Create subscription (admin)",
@@ -306,7 +310,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
-
+    @has_permission("can_update_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="Update subscription (admin)",
@@ -319,7 +323,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
-
+    @has_permission("can_update_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="Partial update subscription (admin)",
@@ -332,7 +336,7 @@ class AdminSubscriptionHistoryViewSet(viewsets.ModelViewSet):
     )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
+    @has_permission("can_delete_subscriptions")
     @swagger_auto_schema(
         tags=["admin.schoolsubscription"],
         operation_summary="Delete subscription (admin)",
