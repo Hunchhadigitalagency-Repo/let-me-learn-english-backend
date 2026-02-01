@@ -5,7 +5,7 @@ from tasks.models import Task, SpeakingActivity, speakingActivitySample
 from tasks.serializers.task_serializers import TaskSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from utils.decorators import has_permission
 # ------------------------------
 # Task ViewSet
 # ------------------------------
@@ -15,6 +15,7 @@ class TaskViewSet(viewsets.ViewSet):
     """
     permission_classes = []  # Define your permissions here
     # List all tasks
+    @has_permission("can_read_task")
     @swagger_auto_schema(
         operation_description="List all tasks",
         responses={200: TaskSerializer(many=True)}
@@ -25,6 +26,7 @@ class TaskViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Retrieve single task
+    @has_permission("can_read_task")
     @swagger_auto_schema(
         operation_description="Retrieve a single task by ID",
         responses={200: TaskSerializer()}
@@ -35,6 +37,7 @@ class TaskViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create new task
+    @has_permission("can_write_task")
     @swagger_auto_schema(
         operation_description="Create a new task",
         request_body=TaskSerializer,
@@ -48,6 +51,7 @@ class TaskViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update
+    @has_permission("can_update_task")
     @swagger_auto_schema(
         operation_description="Partially update a task",
         request_body=TaskSerializer,
@@ -62,6 +66,7 @@ class TaskViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete task
+    @has_permission("can_delete_task")
     @swagger_auto_schema(
         operation_description="Delete a task",
         responses={204: "Deleted successfully", 404: "Not Found"}
