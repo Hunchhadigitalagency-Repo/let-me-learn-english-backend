@@ -44,7 +44,7 @@ from user.viewsets.student_views import (
     StudentEditView,
 )
 from user.viewsets.school_views import SchoolDropdownViewSet
-
+from user.viewsets.role_permissions_view import RolePermissionViewSet
 # =========================
 # Routers
 # =========================
@@ -108,6 +108,13 @@ urlpatterns = [
 
     #----------- User Management ----------
     path('user-management/dropdown/', UserDropdownAPIView.as_view(), name='user-dropdown'),
+    
+    
+    path('roles/', RolePermissionViewSet.as_view({'get': 'list_roles'}), name='list-roles'),
+    path('roles/<int:pk>/', RolePermissionViewSet.as_view({'get': 'list_roles'}), name='list-roles'),
+    path('roles/create/', RolePermissionViewSet.as_view({'post': 'create_role_and_permission'}), name='create-role'),
+    path('roles/<int:pk>/update/', RolePermissionViewSet.as_view({'patch': 'update_role_and_permission'}), name='update-role'),
+    path('roles/<int:pk>/delete/', RolePermissionViewSet.as_view({'delete': 'delete_role'}), name='delete-role'),
 
 
     # -------- AllAuth --------

@@ -153,3 +153,25 @@ class FocalPerson(models.Model):
     email=models.EmailField(max_length=255)
     designation=models.CharField(max_length=255)
     school=models.ForeignKey(School,on_delete=models.CASCADE)
+    
+    
+from django.db import models
+from django.contrib.auth.models import Group
+    
+class CustomRole(models.Model):
+    user = models.ManyToManyField(User, related_name='roles', blank=True)
+    role = models.CharField(max_length=250, blank=True, null=True)
+    group = models.OneToOneField(Group, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    
+    def __str__(self):
+        return f"{self.role or 'No Role'}"
+    
+    
+class CustomPermissionClass(models.Model):
+    name = models.CharField(blank=True, null=True, max_length=250)
+    role = models.ForeignKey(CustomRole, on_delete=models.CASCADE, related_name='permissions')
+    
+    def __str__(self):
+        return f"Permission: {self.name or 'Unnamed'} (Role: {self.role})"
