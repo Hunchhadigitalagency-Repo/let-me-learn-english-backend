@@ -34,4 +34,10 @@ class RoleWithPermissionsSerializer(serializers.ModelSerializer):
         model = CustomRole
         fields = ['id', 'role', 'permissions', 'user', 'group', 'is_active']
         
+    def to_representation(self, instance):
+       
+        representation = super().to_representation(instance)
+        representation['user'] = UserSerializer(instance.user.all(), many=True, context=self.context).data
+        return representation
+        
         

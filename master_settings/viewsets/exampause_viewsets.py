@@ -16,7 +16,7 @@ from drf_yasg import openapi
 from utils.decorators import has_permission
 class ExamPauseViewSet(ModelViewSet):
    
-    queryset = ExamPause.objects.all().order_by('-start_date')
+    queryset = ExamPause.objects.select_related('school').all().order_by('-start_date')
     permission_classes = [IsAuthenticated]
 
     # Pagination
