@@ -10,6 +10,7 @@ from tasks.serializers.speaking_activity_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class SpeakingActivityViewSet(viewsets.ViewSet):
     """
     Full CRUD ViewSet for SpeakingActivity with dynamic serializers and pagination.
@@ -22,6 +23,7 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return SpeakingActivityCreateSerializer
 
     # List all speaking activities with pagination
+    @has_permission("can_read_speakingactivity")
     @swagger_auto_schema(
         operation_description="List all speaking activities with pagination",
         responses={200: SpeakingActivityListSerializer(many=True)}
@@ -36,6 +38,7 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single speaking activity
+    @has_permission("can_read_speakingactivity")
     @swagger_auto_schema(
         operation_description="Retrieve a single speaking activity by ID",
         responses={200: SpeakingActivityListSerializer()}
@@ -47,6 +50,7 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new speaking activity
+    @has_permission("can_write_speakingactivity")
     @swagger_auto_schema(
         operation_description="Create a new speaking activity",
         request_body=SpeakingActivityCreateSerializer,
@@ -64,6 +68,7 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a speaking activity completely (PUT)
+    @has_permission("can_update_speakingactivity")
     @swagger_auto_schema(
         operation_description="Update a speaking activity completely",
         request_body=SpeakingActivityCreateSerializer,
@@ -83,6 +88,7 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @has_permission("can_update_speakingactivity")
     @swagger_auto_schema(
         operation_description="Partially update a speaking activity",
         request_body=SpeakingActivityCreateSerializer,
@@ -101,7 +107,8 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Delete speaking activity
+    # Delete speaking 
+    @has_permission("can_delete_speakingactivity")
     @swagger_auto_schema(
         operation_description="Delete a speaking activity",
         responses={204: "Deleted successfully", 404: "Not Found"}
