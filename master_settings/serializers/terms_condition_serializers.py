@@ -5,4 +5,4 @@ class TermsandConditionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TermsandConditions
         # Include all fields
-        fields = ['id', 'topic', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'topic', 'description', 'is_active', 'created_at', 'effective_date', 'updated_at']

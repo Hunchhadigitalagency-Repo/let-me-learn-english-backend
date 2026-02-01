@@ -33,41 +33,41 @@ class IELTSTaskViewSet(viewsets.ReadOnlyModelViewSet):
         if module_type == "listening":
             qs = ListeningActivity.objects.filter(task=task)
             return Response(
-                IELTSListeningActivitySerializer(qs, many=True).data
+                IELTSListeningActivitySerializer(qs, context={"request": request}, many=True).data
             )
 
         if module_type == "reading":
             qs = ReadingActivity.objects.filter(task=task)
             return Response(
-                IELTSReadingActivitySerializer(qs, many=True).data
+                IELTSReadingActivitySerializer(qs, context={"request": request}, many=True).data
             )
 
         if module_type == "writing":
             qs = WritingActivity.objects.filter(task=task)
             return Response(
-                IELTSWritingActivitySerializer(qs, many=True).data
+                IELTSWritingActivitySerializer(qs, context={"request": request}, many=True).data
             )
 
         if module_type == "speaking":
             qs = SpeakingActivity.objects.filter(task=task)
             return Response(
-                IELTSSpeakingActivitySerializer(qs, many=True).data
+                IELTSSpeakingActivitySerializer(qs, context={"request": request}, many=True).data
             )
 
         if module_type == "all":
             return Response({
-                "task": IELTSTaskSerializer(task).data,
+                "task": IELTSTaskSerializer(task, context={"request": request}).data,
                 "listening": IELTSListeningActivitySerializer(
-                    ListeningActivity.objects.filter(task=task), many=True
+                    ListeningActivity.objects.filter(task=task), context={"request": request}, many=True
                 ).data,
                 "reading": IELTSReadingActivitySerializer(
-                    ReadingActivity.objects.filter(task=task), many=True
+                    ReadingActivity.objects.filter(task=task), context={"request": request}, many=True
                 ).data,
                 "writing": IELTSWritingActivitySerializer(
-                    WritingActivity.objects.filter(task=task), many=True
+                    WritingActivity.objects.filter(task=task), context={"request": request}, many=True
                 ).data,
                 "speaking": IELTSSpeakingActivitySerializer(
-                    SpeakingActivity.objects.filter(task=task), many=True
+                    SpeakingActivity.objects.filter(task=task), context={"request": request}, many=True
                 ).data,
             })
 
