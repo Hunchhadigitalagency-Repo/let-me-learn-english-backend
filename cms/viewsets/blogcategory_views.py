@@ -10,13 +10,14 @@ from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.decorators import action
-
+from utils.decorators import has_permission
 class BlogCategoryViewSet(viewsets.ViewSet):
 
     def get_queryset(self):
         return BlogCategory.objects.all().order_by('-created_at')
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_categoryblog")
     @swagger_auto_schema(
         operation_description="List all blog categories with pagination (latest first)",
         responses={200: BlogCategoryListSerializer(many=True)}
@@ -41,6 +42,7 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         })
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_categoryblog")
     @swagger_auto_schema(
         operation_description="Retrieve a single blog category by ID",
         manual_parameters=[
@@ -66,6 +68,7 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         })
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_categoryblog")
     @swagger_auto_schema(
         operation_description="Create a new blog category",
         request_body=BlogCategoryCreateSerializer,
@@ -87,6 +90,7 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_categoryblog")
     @swagger_auto_schema(
         operation_description="Update a blog category completely by ID",
         manual_parameters=[
@@ -119,6 +123,7 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_categoryblog")
     @swagger_auto_schema(
         operation_description="Partially update a blog category by ID",
         manual_parameters=[
@@ -153,6 +158,7 @@ class BlogCategoryViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_categoryblog")
     @swagger_auto_schema(
         operation_description="Delete a blog category by ID",
         manual_parameters=[

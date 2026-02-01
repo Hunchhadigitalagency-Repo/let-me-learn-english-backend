@@ -10,7 +10,7 @@ from tasks.serializers.listening_activity_question_serializers import (
     ListeningActivityQuestionListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from utils.decorators import has_permission
 
 class ListeningActivityQuestionViewSet(viewsets.ViewSet):
 
@@ -21,6 +21,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return ListeningActivityQuestionCreateSerializer
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_listeningquestion")
     @swagger_auto_schema(
         operation_description="List all listening activity questions with pagination",
         responses={200: ListeningActivityQuestionListSerializer(many=True)}
@@ -34,6 +35,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_listeningquestion")
     @swagger_auto_schema(
         operation_description="Retrieve a single listening activity question by ID",
         responses={200: ListeningActivityQuestionListSerializer()}
@@ -45,6 +47,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_listeningquestion")
     @swagger_auto_schema(
         operation_description="Create a new listening activity question",
         request_body=ListeningActivityQuestionCreateSerializer,
@@ -63,6 +66,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_listeningquestion")
     @swagger_auto_schema(
         operation_description="Update a listening activity question completely",
         request_body=ListeningActivityQuestionCreateSerializer,
@@ -83,6 +87,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_listeningquestion")
     @swagger_auto_schema(
         operation_description="Partially update a listening activity question",
         request_body=ListeningActivityQuestionCreateSerializer,
@@ -103,6 +108,7 @@ class ListeningActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_listeningquestion")
     @swagger_auto_schema(
         operation_description="Delete a listening activity question",
         responses={204: "Deleted successfully", 404: "Not Found"}

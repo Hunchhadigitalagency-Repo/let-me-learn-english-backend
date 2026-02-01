@@ -8,13 +8,13 @@ from drf_yasg.utils import swagger_auto_schema
 from master_settings.models import TermsandConditions
 from master_settings.serializers.terms_condition_serializers import TermsandConditionsSerializer
 from utils.permissions import IsAdminUserType
-
+from utils.decorators import has_permission
 class TermsandConditionsViewSet(ViewSet):
     """
     Singleton Terms and Conditions APIs
     """
     permission_classes = [IsAuthenticated]
-
+    @has_permission("can_read_termscondition")
     @swagger_auto_schema(
         tags=['admin.terms-and-conditions'],
         operation_summary="Get Terms and Conditions",
@@ -30,6 +30,8 @@ class TermsandConditionsViewSet(ViewSet):
 
         serializer = TermsandConditionsSerializer(policy)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @has_permission("can_write_termscondition")
 
     @swagger_auto_schema(
         tags=['admin.terms-and-conditions'],

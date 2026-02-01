@@ -6,6 +6,7 @@ from user.serializers.school_serializers import SchoolBasicSerializer
 from django.db.models import Q  
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class SchoolBasicViewSet(viewsets.ViewSet):
     permission_classes = [IsAdminUserType]
     search_param = openapi.Parameter(
@@ -13,7 +14,7 @@ class SchoolBasicViewSet(viewsets.ViewSet):
         description="Search by school name, district, province, country, city, or address",
         type=openapi.TYPE_STRING
     )
-
+    @has_permission("can_read_Schoolviews")
     @swagger_auto_schema(
         manual_parameters=[search_param],
         responses={200: SchoolBasicSerializer(many=True)}

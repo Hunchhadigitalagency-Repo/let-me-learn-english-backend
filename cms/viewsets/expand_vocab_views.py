@@ -11,7 +11,7 @@ from drf_yasg import openapi
 from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
 from utils.paginator import CustomPageNumberPagination
 
-
+from utils.decorators import has_permission
 class ExpandVocabViewSet(ModelViewSet):
     
     queryset = ExpandVocab.objects.all().order_by('word')
@@ -40,6 +40,7 @@ class ExpandVocabViewSet(ModelViewSet):
     ordering_fields = ['created_at', 'updated_at', 'word']
 
     # ---------- Swagger Overrides ----------
+    @has_permission("can_read_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -48,6 +49,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+    
+    @has_permission("can_write_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -56,7 +59,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
-
+    
+    @has_permission("can_read_expandvocab")
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
         operation_summary="Retrieve Expand Vocabulary",
@@ -64,6 +68,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
+    
+    @has_permission("can_update_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -72,7 +78,7 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
-
+    @has_permission("can_update_expandvocab")
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
         operation_summary="Partial Update Expand Vocabulary",
@@ -80,6 +86,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+    
+    @has_permission("can_delete_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],

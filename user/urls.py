@@ -107,7 +107,7 @@ urlpatterns = [
     path('school-student-edit/<int:student_id>/', StudentEditView.as_view(), name='student-edit'),
 
     #----------- User Management ----------
-    path('user-management/dropdown/', UserDropdownAPIView.as_view(), name='user-dropdown'),
+    path('user-management-dropdown/', UserDropdownAPIView.as_view(), name='user-dropdown'),
     
     
     path('roles/', RolePermissionViewSet.as_view({'get': 'list_roles'}), name='list-roles'),
