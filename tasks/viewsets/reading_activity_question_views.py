@@ -10,6 +10,7 @@ from tasks.serializers.reading_activity_question_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class ReadingActivityQuestionViewSet(viewsets.ViewSet):
 
     # Helper to choose serializer based on action
@@ -19,6 +20,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return ReadingActivityQuestionCreateSerializer
 
     # List all questions with pagination
+    @has_permission("can_read_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="List all reading activity questions with pagination",
         responses={200: ReadingActivityQuestionListSerializer(many=True)}
@@ -34,6 +36,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single question
+    @has_permission("can_read_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Retrieve a single reading activity question by ID",
         responses={200: ReadingActivityQuestionListSerializer()}
@@ -45,6 +48,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new question
+    @has_permission("can_write_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Create a new reading activity question",
         request_body=ReadingActivityQuestionCreateSerializer,
@@ -62,6 +66,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a question completely (PUT)
+    @has_permission("can_update_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Update a reading activity question completely",
         request_body=ReadingActivityQuestionCreateSerializer,
@@ -81,6 +86,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @has_permission("can_update_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Partially update a reading activity question",
         request_body=ReadingActivityQuestionCreateSerializer,
@@ -100,6 +106,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a question
+    @has_permission("can_delete_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Delete a reading activity question",
         responses={204: "Deleted successfully", 404: "Not Found"}

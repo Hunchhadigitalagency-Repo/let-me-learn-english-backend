@@ -7,6 +7,7 @@ from student.serializers.admin_student_serializers import StudentSerializer
 from utils.permissions import IsAdminUserType
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class TopStudentViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsAdminUserType]
     school_param = openapi.Parameter(
@@ -24,7 +25,7 @@ class TopStudentViewSet(viewsets.ViewSet):
         description="Search top students by name or email",
         type=openapi.TYPE_STRING
     )
-
+    @has_permission("can_read_topstudent")
     @swagger_auto_schema(
         manual_parameters=[school_param, grade_param, search_param],
         responses={200: StudentSerializer(many=True)}

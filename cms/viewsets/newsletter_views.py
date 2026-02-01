@@ -9,7 +9,7 @@ from cms.serializers.newsletter_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from utils.decorators import has_permission
 
 class NewsletterViewSet(viewsets.ViewSet):
 
@@ -17,6 +17,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         return Newsletters.objects.all().order_by('-id')
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_newsletter")
     @swagger_auto_schema(
         operation_description="List all newsletters with pagination (latest first)",
         responses={200: NewsletterListSerializer(many=True)}
@@ -41,6 +42,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         })
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_newsletter")
     @swagger_auto_schema(
         operation_description="Retrieve a single newsletter by ID",
         manual_parameters=[
@@ -66,6 +68,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         })
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_newsletter")
     @swagger_auto_schema(
         operation_description="Create a new newsletter",
         request_body=NewsletterCreateSerializer,
@@ -87,6 +90,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_newsletter")
     @swagger_auto_schema(
         operation_description="Update a newsletter completely by ID",
         manual_parameters=[
@@ -119,6 +123,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_newsletter")
     @swagger_auto_schema(
         operation_description="Partially update a newsletter by ID",
         manual_parameters=[
@@ -153,6 +158,7 @@ class NewsletterViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_newsletter")
     @swagger_auto_schema(
         operation_description="Delete a newsletter by ID",
         manual_parameters=[

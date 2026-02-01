@@ -10,11 +10,11 @@ from drf_yasg.utils import swagger_auto_schema
 from master_settings.models import PrivacyPolicy
 from master_settings.serializers.privacy_policy_serializers import PrivacyPolicySerializer
 from utils.permissions import IsAdminUserType
-
+from utils.decorators import has_permission
 class PrivacyPolicyViewSet(ViewSet):
    
     permission_classes = [IsAdminUserType]
-
+    @has_permission("can_read_privacypolicy")
     @swagger_auto_schema(
         tags=['admin.privacy-policy'],
         operation_summary="Get Privacy Policy",
@@ -28,7 +28,7 @@ class PrivacyPolicyViewSet(ViewSet):
 
         serializer = PrivacyPolicySerializer(policy)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    @has_permission("can_write_privacypolicy")
     @swagger_auto_schema(
         tags=['admin.privacy-policy'],
         operation_summary="Create or Update Privacy Policy",

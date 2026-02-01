@@ -8,10 +8,11 @@ from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
+from utils.decorators import has_permission
 class StudentAttemptsViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
    
-    
+    @has_permission("can_read_studentattempts")
     def list(self, request):
         queryset = StudentAttempts.objects.all().order_by('-started_at')
 
@@ -34,6 +35,7 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
 
 
     # RETRIEVE
+    @has_permission("can_read_studentattempts")
     def retrieve(self, request, pk=None):
         try:
             attempt = StudentAttempts.objects.get(pk=pk)
@@ -43,6 +45,7 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # CREATE
+    @has_permission("can_write_studentattempts")
     def create(self, request):
         serializer = StudentAttemptsCreateSerializer(data=request.data)
         if serializer.is_valid():
@@ -55,6 +58,7 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # UPDATE / PATCH
+    @has_permission("can_update_studentattempts")
     def update(self, request, pk=None):
         try:
             attempt = StudentAttempts.objects.get(pk=pk)
@@ -72,6 +76,7 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # PARTIAL UPDATE
+    @has_permission("can_update_studentattempts")
     def partial_update(self, request, pk=None):
         try:
             attempt = StudentAttempts.objects.get(pk=pk)
@@ -88,6 +93,7 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DELETE
+    @has_permission("can_delete_studentattempts")
     def destroy(self, request, pk=None):
         try:
             attempt = StudentAttempts.objects.get(pk=pk)

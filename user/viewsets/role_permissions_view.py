@@ -42,7 +42,7 @@ class RoleDropdownViewSet(viewsets.ViewSet):
 
 
 class RolePermissionViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated, HasAnyCustomPermission]
+    permission_classes = [IsAuthenticated]
     required_permissions = {
         "can_read_roles",
         "can_write_roles",

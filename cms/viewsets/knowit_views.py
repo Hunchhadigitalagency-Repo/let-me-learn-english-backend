@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class NowKnowItViewSet(viewsets.ModelViewSet):
     
     queryset = NowKnowIt.objects.all().order_by("-created_at")
@@ -30,6 +31,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'updated_at']
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_knowit")
     @swagger_auto_schema(
         operation_description="List all NowKnowIt items with pagination",
         responses={200: NowKnowItSerializer(many=True)}
@@ -38,6 +40,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_knowit")
     @swagger_auto_schema(
         operation_description="Retrieve a single NowKnowIt item by ID",
         manual_parameters=[
@@ -67,6 +70,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_knowit")
     @swagger_auto_schema(
         operation_description="Create a new NowKnowIt item",
         request_body=NowKnowItSerializer,
@@ -91,6 +95,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_knowit")
     @swagger_auto_schema(
         operation_description="Update a NowKnowIt item completely by ID",
         manual_parameters=[
@@ -129,6 +134,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_knowit")
     @swagger_auto_schema(
         operation_description="Partially update a NowKnowIt item by ID",
         manual_parameters=[
@@ -171,6 +177,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_knowit")
     @swagger_auto_schema(
         operation_description="Delete a NowKnowIt item by ID",
         manual_parameters=[

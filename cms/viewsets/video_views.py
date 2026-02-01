@@ -6,12 +6,13 @@ from django.shortcuts import get_object_or_404
 from cms.models import Videos
 from cms.serializers.video_serializers import VideoCreateSerializer, VideoListSerializer
 from utils.paginator import CustomPageNumberPagination
-
+from utils.decorators import has_permission
 
 class VideoViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     # GET /videos/
+    @has_permission("can_read_video")
     def list(self, request):
         queryset = Videos.objects.all().order_by('-created_at')
 
@@ -32,6 +33,7 @@ class VideoViewSet(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     # POST /videos/
+    @has_permission("can_write_video")
     def create(self, request):
         serializer = VideoCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -44,6 +46,8 @@ class VideoViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # GET /videos/{id}/
+    @has_permission("can_read_video")
+    
     def retrieve(self, request, pk=None):
         video = get_object_or_404(Videos, pk=pk)
         serializer = VideoListSerializer(video, context={'request': request})
@@ -53,6 +57,7 @@ class VideoViewSet(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
     # PATCH /videos/{id}/
+    @has_permission("can_update_video")
     def partial_update(self, request, pk=None):
         video = get_object_or_404(Videos, pk=pk)
         serializer = VideoCreateSerializer(
@@ -72,6 +77,7 @@ class VideoViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DELETE /videos/{id}/
+    @has_permission("can_delete_video")
     def destroy(self, request, pk=None):
         video = get_object_or_404(Videos, pk=pk)
         video.delete()

@@ -10,6 +10,7 @@ from tasks.serializers.speaking_activity_question_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
     """
     Full CRUD ViewSet for SpeakingActivityQuestion with dynamic serializers and pagination.
@@ -22,6 +23,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return SpeakingActivityQuestionCreateSerializer
 
     # List all questions with pagination
+    @has_permission("can_read_speakingactivity")
     @swagger_auto_schema(
         operation_description="List all speaking activity questions with pagination",
         responses={200: SpeakingActivityQuestionListSerializer(many=True)}
