@@ -14,7 +14,7 @@ from utils.decorators import has_permission
 class BlogCategoryViewSet(viewsets.ViewSet):
 
     def get_queryset(self):
-        return BlogCategory.objects.all().order_by('-created_at')
+        return BlogCategory.objects.all().order_by('-id')
 
     # ---------------- LIST ----------------
     @has_permission("can_read_categoryblog")

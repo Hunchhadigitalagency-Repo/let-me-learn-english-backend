@@ -18,7 +18,8 @@ class BlogViewSet(viewsets.ViewSet):
         return BlogCreateSerializer
 
     def get_queryset(self):
-        return Blog.objects.all().order_by('-created_at')
+       
+        return Blog.objects.select_related('category').all().order_by('-id')
 
     # ---------------- LIST ----------------
     @has_permission("can_read_blog")

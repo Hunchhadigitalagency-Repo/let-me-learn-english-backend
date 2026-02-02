@@ -38,7 +38,14 @@ class StudentViewSet(viewsets.ViewSet):
         search_query = request.query_params.get('search', '').strip()
 
        
-        students_qs = User.objects.filter(userprofile__user_type='student')
+        students_qs = (
+            User.objects
+                .filter(userprofile__user_type='student')
+                .select_related('userprofile')
+                .prefetch_related('student_school_relations__school')
+                .distinct()
+        )
+
 
        
         if school_id:

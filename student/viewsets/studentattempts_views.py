@@ -14,7 +14,12 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
    
     @has_permission("can_read_studentattempts")
     def list(self, request):
-        queryset = StudentAttempts.objects.all().order_by('-started_at')
+        queryset = (
+            StudentAttempts.objects
+            .select_related('student', 'task')
+            .order_by('-started_at')
+        )
+
 
         paginator = CustomPageNumberPagination()
         page = paginator.paginate_queryset(queryset, request)
