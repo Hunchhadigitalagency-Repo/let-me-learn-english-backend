@@ -14,7 +14,7 @@ class ContactUsViewSet(viewsets.ViewSet):
     """
 
     def get_queryset(self):
-        return ContactUs.objects.all().order_by('-created_at')
+        return ContactUs.objects.all().order_by('-id')
 
     # ---------------- LIST ----------------
     @has_permission("can_read_contactus")

@@ -32,29 +32,35 @@ class TopStudentViewSet(viewsets.ViewSet):
     )
 
     def list(self, request):
-        
         school_id = request.query_params.get('school_id')
         grade = request.query_params.get('grade')
         search_query = request.query_params.get('search', '').strip()
 
-       
-        students_qs = User.objects.filter(userprofile__user_type='student')
+        students_qs = (
+            User.objects
+            .filter(userprofile__user_type='student')
+            .select_related('userprofile')
+            .prefetch_related('student_school_relations__school')
+            .distinct()
+        )
 
-       
         if school_id:
-            students_qs = students_qs.filter(student_school_relations__school_id=school_id)
+            students_qs = students_qs.filter(
+                student_school_relations__school_id=school_id
+            )
 
-
-       
         if grade:
-            students_qs = students_qs.filter(userprofile__grade__iexact=grade)
+            students_qs = students_qs.filter(
+                userprofile__grade__iexact=grade
+            )
 
-       
         if search_query:
             students_qs = students_qs.filter(
                 Q(name__icontains=search_query) |
                 Q(email__icontains=search_query)
             )
 
-        serializer = StudentSerializer(students_qs, many=True, context={'request': request})
+        serializer = StudentSerializer(
+            students_qs, many=True, context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)

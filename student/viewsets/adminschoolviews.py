@@ -24,7 +24,7 @@ class SchoolBasicViewSet(viewsets.ViewSet):
         search_query = request.query_params.get('search', '').strip()
 
         if search_query:
-            schools = School.objects.filter(
+            schools = schools = School.objects.select_related('district','province','country')(
                 Q(name__icontains=search_query) |
                 Q(district__name__icontains=search_query) |
                 Q(country__name__icontains=search_query) |
