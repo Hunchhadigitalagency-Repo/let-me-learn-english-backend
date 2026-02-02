@@ -36,7 +36,6 @@ class SpeakingActivityQuestionListSerializer(serializers.ModelSerializer):
             'type',
             'attachment_url',
             'durations',
-            'text_question'
         ]
 
     def get_speaking_activity(self, obj):
