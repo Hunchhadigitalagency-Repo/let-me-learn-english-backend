@@ -141,8 +141,13 @@ class ExpandVocabDropdownViewSet(viewsets.ViewSet):
         responses={200: ExpandVocabSerializer(many=True)}
     )
     def list(self, request):
-        start_date = parse_date(request.query_params.get("start_date"))
-        end_date = parse_date(request.query_params.get("end_date"))
+       
+        start_date_str = request.query_params.get("start_date")
+        end_date_str = request.query_params.get("end_date")
+
+      
+        start_date = parse_date(start_date_str) if start_date_str else None
+        end_date = parse_date(end_date_str) if end_date_str else None
 
         qs = ExpandVocab.objects.filter(is_active=True)
 
@@ -156,4 +161,5 @@ class ExpandVocabDropdownViewSet(viewsets.ViewSet):
         qs = qs.order_by('word')
         serializer = ExpandVocabSerializer(qs, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
