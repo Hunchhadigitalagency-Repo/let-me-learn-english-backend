@@ -117,3 +117,27 @@ class SpeakingActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(SpeakingActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+from rest_framework import viewsets
+from rest_framework.response import Response
+from tasks.models import SpeakingActivity
+from tasks.serializers.speaking_activity_serializers import SpeakingActivityDropdownSerializer
+from utils.decorators import has_permission
+from drf_yasg.utils import swagger_auto_schema
+
+class SpeakingActivityDropdownViewSet(viewsets.ViewSet):
+  
+
+    @has_permission("can_read_speakingactivity")
+    @swagger_auto_schema(
+        operation_description="List all speaking activities for dropdown with nested questions",
+        responses={200: SpeakingActivityDropdownSerializer(many=True)}
+    )
+    def list(self, request):
+        activities = SpeakingActivity.objects.all().order_by('title') 
+        serializer = SpeakingActivityDropdownSerializer(activities, many=True, context={'request': request})
+        return Response(serializer.data)

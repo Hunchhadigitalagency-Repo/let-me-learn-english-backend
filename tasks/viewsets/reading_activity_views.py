@@ -11,6 +11,8 @@ from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from utils.decorators import has_permission
+from rest_framework.permissions import IsAuthenticated
+from tasks.serializers.reading_activity_serializers import ReadingActivityDropdownSerializer
 class ReadingActivityViewSet(viewsets.ViewSet):
     
     # Helper to choose serializer depending on action
@@ -117,3 +119,20 @@ class ReadingActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(ReadingActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+    
+class ReadingActivityDropdownViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+  
+
+  
+    @swagger_auto_schema(
+        operation_description="List all speaking activities for dropdown with nested questions",
+        responses={200: ReadingActivityDropdownSerializer(many=True)}
+    )
+    def list(self, request):
+        activities = ReadingActivity.objects.all().order_by('title') 
+        serializer = ReadingActivityDropdownSerializer(activities, many=True, context={'request': request})
+        return Response(serializer.data)
+
