@@ -7,7 +7,7 @@ from cms.models import ExpandVocab
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from rest_framework.permissions import AllowAny
 from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
 from utils.paginator import CustomPageNumberPagination
 from rest_framework.decorators import action
@@ -98,7 +98,26 @@ class ExpandVocabViewSet(ModelViewSet):
         return super().destroy(request, *args, **kwargs)
     
     
-    @action(detail=False, methods=["get"], url_path="dropdown")
+    
+    
+    
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils.dateparse import parse_date
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from cms.models import ExpandVocab
+from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
+
+class ExpandVocabDropdownViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for returning ExpandVocab dropdown filtered by date range.
+    Only accessible to authenticated users with proper permission.
+    """
+    permission_classes = [IsAuthenticated]  
+
     @swagger_auto_schema(
         operation_description="Dropdown list of ExpandVocab filtered by date range",
         manual_parameters=[
@@ -121,18 +140,20 @@ class ExpandVocabViewSet(ModelViewSet):
         ],
         responses={200: ExpandVocabSerializer(many=True)}
     )
-    def dropdown(self, request):
-       
-        start_date = parse_date(request.query_params["start_date"])
-        end_date = parse_date(request.query_params["end_date"])
+    def list(self, request):
+        start_date = parse_date(request.query_params.get("start_date"))
+        end_date = parse_date(request.query_params.get("end_date"))
+
+        qs = ExpandVocab.objects.filter(is_active=True)
 
        
-        qs = ExpandVocab.objects.filter(
-            is_active=True,
-            created_at__date__gte=start_date,
-            created_at__date__lte=end_date
-        ).order_by('word')
+        if start_date and end_date:
+            qs = qs.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date
+            )
 
-       
+        qs = qs.order_by('word')
         serializer = ExpandVocabSerializer(qs, many=True, context={'request': request})
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
