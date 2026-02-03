@@ -147,13 +147,16 @@ class SpeakingActivityDropdownViewSet(viewsets.ViewSet):
         responses={200: SpeakingActivityDropdownSerializer(many=True)}
     )
     def list(self, request):
-      
         question_type = request.query_params.get('type', None)
 
-       
-        activities = SpeakingActivity.objects.all().order_by('title')
+        if question_type:
+           
+            activities = SpeakingActivity.objects.filter(
+                speakingactivityquestion__type=question_type
+            ).distinct().order_by('title')
+        else:
+            activities = SpeakingActivity.objects.all().order_by('title')
 
-       
         serializer = SpeakingActivityDropdownSerializer(
             activities,
             many=True,
