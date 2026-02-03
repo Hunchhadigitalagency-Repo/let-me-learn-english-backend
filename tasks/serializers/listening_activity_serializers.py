@@ -3,6 +3,7 @@ from rest_framework import serializers
 from tasks.models import ListeningActivity, ListeningActivityQuestion
 from tasks.models import Task  # To get task name
 from utils.urlsfixer import build_https_url
+from tasks.serializers.listening_activity_question_serializers import ListeningActivityQuestionListSerializer
 # --------------------------
 # ListeningActivityQuestion Serializer
 # --------------------------
@@ -58,3 +59,16 @@ class ListeningActivityListSerializer(serializers.ModelSerializer):
         elif obj.audio_file:
             return obj.audio_file.url
         return None
+
+
+
+class ListeningActivityDropdownSerializer(serializers.ModelSerializer):
+    questions = ListeningActivityQuestionListSerializer(
+        source='listeningactivityquestion_set',  # NO space here
+        many=True,
+        read_only=True
+    )
+    
+    class Meta:
+        model = ListeningActivity
+        fields = ['id', 'task', 'title', 'duration', 'instruction', 'audio_file', 'questions']

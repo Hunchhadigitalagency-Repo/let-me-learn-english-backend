@@ -128,11 +128,12 @@ from tasks.models import SpeakingActivity
 from tasks.serializers.speaking_activity_serializers import SpeakingActivityDropdownSerializer
 from utils.decorators import has_permission
 from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.permissions import IsAuthenticated
 class SpeakingActivityDropdownViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
   
 
-    @has_permission("can_read_speakingactivity")
+    
     @swagger_auto_schema(
         operation_description="List all speaking activities for dropdown with nested questions",
         responses={200: SpeakingActivityDropdownSerializer(many=True)}

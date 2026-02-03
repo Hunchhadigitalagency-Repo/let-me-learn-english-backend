@@ -7,10 +7,12 @@ from tasks.serializers.listening_activity_serializers import (
     ListeningActivityCreateSerializer,
     ListeningActivityListSerializer
 )
+from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from utils.paginator import CustomPageNumberPagination
 from utils.decorators import has_permission
+from tasks.serializers.listening_activity_serializers import ListeningActivityDropdownSerializer
 class ListeningActivityViewSet(viewsets.ViewSet):
     
     # Helper to choose serializer depending on action
@@ -121,3 +123,20 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+class ListeningActivityDropdownViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+  
+
+  
+    @swagger_auto_schema(
+        operation_description="List all listening activities for dropdown with nested questions",
+        responses={200: ListeningActivityDropdownSerializer(many=True)}
+    )
+    def list(self, request):
+        activities = ListeningActivity.objects.all().order_by('title') 
+        serializer = ListeningActivityDropdownSerializer(activities, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
