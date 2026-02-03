@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from tasks.models import SpeakingActivity, speakingActivitySample
 from utils.urlsfixer import build_https_url
-
+from tasks.serializers.speaking_activity_question_serializers import SpeakingActivityQuestionListSerializer
 # --------------------------
 # Serializer for Create/Update SpeakingActivity
 # --------------------------
@@ -11,7 +11,7 @@ class SpeakingActivityCreateSerializer(serializers.ModelSerializer):
         model = SpeakingActivity
         fields = [
             'id',
-            'task',  # pass task as ID
+            'task',  
             'title',
             'duration',
             'instructions',
@@ -62,3 +62,16 @@ class SpeakingActivityListSerializer(serializers.ModelSerializer):
             }
             for sample in samples
         ]
+
+
+
+class SpeakingActivityDropdownSerializer(serializers.ModelSerializer):
+    questions = SpeakingActivityQuestionListSerializer(
+        source='speakingactivityquestion_set',  
+        many=True,
+        read_only=True
+    )
+    
+    class Meta:
+        model = SpeakingActivity
+        fields = ['id', 'title', 'duration', 'instructions', 'use_default_instruction', 'questions']
