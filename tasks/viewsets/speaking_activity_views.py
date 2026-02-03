@@ -135,10 +135,28 @@ class SpeakingActivityDropdownViewSet(viewsets.ViewSet):
 
     
     @swagger_auto_schema(
-        operation_description="List all speaking activities for dropdown with nested questions",
+        operation_description="List all speaking activities for dropdown with nested questions, filterable by question type",
+        manual_parameters=[
+            openapi.Parameter(
+                'type', 
+                openapi.IN_QUERY,
+                description="Filter questions by type (e.g., reading, writing)",
+                type=openapi.TYPE_STRING
+            )
+        ],
         responses={200: SpeakingActivityDropdownSerializer(many=True)}
     )
     def list(self, request):
-        activities = SpeakingActivity.objects.all().order_by('title') 
-        serializer = SpeakingActivityDropdownSerializer(activities, many=True, context={'request': request})
+      
+        question_type = request.query_params.get('type', None)
+
+       
+        activities = SpeakingActivity.objects.all().order_by('title')
+
+       
+        serializer = SpeakingActivityDropdownSerializer(
+            activities,
+            many=True,
+            context={'request': request, 'question_type': question_type}
+        )
         return Response(serializer.data)

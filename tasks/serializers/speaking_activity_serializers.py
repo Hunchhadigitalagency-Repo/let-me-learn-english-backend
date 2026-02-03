@@ -1,7 +1,8 @@
 # tasks/serializers/speaking_activity_serializers.py
 from rest_framework import serializers
-from tasks.models import SpeakingActivity, speakingActivitySample
+from tasks.models import SpeakingActivity, speakingActivitySample,SpeakingActivityQuestion
 from utils.urlsfixer import build_https_url
+
 from tasks.serializers.speaking_activity_question_serializers import SpeakingActivityQuestionListSerializer
 # --------------------------
 # Serializer for Create/Update SpeakingActivity
@@ -66,12 +67,16 @@ class SpeakingActivityListSerializer(serializers.ModelSerializer):
 
 
 class SpeakingActivityDropdownSerializer(serializers.ModelSerializer):
-    questions = SpeakingActivityQuestionListSerializer(
-        source='speakingactivityquestion_set',  
-        many=True,
-        read_only=True
-    )
-    
+    questions = serializers.SerializerMethodField()
+
     class Meta:
         model = SpeakingActivity
-        fields = ['id', 'title', 'duration', 'instructions', 'use_default_instruction', 'questions']
+        fields = ['id', 'title', 'duration', 'instructions', 'questions']
+
+    def get_questions(self, obj):
+        # Get type from context (passed from the view)
+        question_type = self.context.get('question_type', None)
+        questions = obj.speakingactivityquestion_set.all()
+        if question_type:
+            questions = questions.filter(type=question_type)
+        return SpeakingActivityQuestionListSerializer(questions, many=True, context=self.context).data
