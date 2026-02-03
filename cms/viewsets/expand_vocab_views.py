@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
 from utils.paginator import CustomPageNumberPagination
-
+from rest_framework.decorators import action
 from utils.decorators import has_permission
 class ExpandVocabViewSet(ModelViewSet):
     
@@ -96,3 +96,43 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+    
+    
+    @action(detail=False, methods=["get"], url_path="dropdown")
+    @swagger_auto_schema(
+        operation_description="Dropdown list of ExpandVocab filtered by date range",
+        manual_parameters=[
+            openapi.Parameter(
+                'start_date',
+                openapi.IN_QUERY,
+                description="Filter entries created on or after this date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+            openapi.Parameter(
+                'end_date',
+                openapi.IN_QUERY,
+                description="Filter entries created on or before this date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+        ],
+        responses={200: ExpandVocabSerializer(many=True)}
+    )
+    def dropdown(self, request):
+       
+        start_date = parse_date(request.query_params["start_date"])
+        end_date = parse_date(request.query_params["end_date"])
+
+       
+        qs = ExpandVocab.objects.filter(
+            is_active=True,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).order_by('word')
+
+       
+        serializer = ExpandVocabSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data, status=200)

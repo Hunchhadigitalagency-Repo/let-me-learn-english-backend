@@ -10,6 +10,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.decorators import action
+from django.utils.dateparse import parse_date  
 from utils.decorators import has_permission
 class NowKnowItViewSet(viewsets.ModelViewSet):
     
@@ -208,3 +210,42 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
             {"detail": "Deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+        
+        
+    
+
+    @action(detail=False, methods=["get"], url_path="dropdown")
+    @swagger_auto_schema(
+        operation_description="Dropdown list using NowKnowItSerializer filtered by date range",
+        manual_parameters=[
+            openapi.Parameter(
+                'start_date',
+                openapi.IN_QUERY,
+                description="Filter items with created_at >= start_date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+            openapi.Parameter(
+                'end_date',
+                openapi.IN_QUERY,
+                description="Filter items with created_at <= end_date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+        ],
+        responses={200: NowKnowItSerializer(many=True)}
+    )
+    def dropdown(self, request):
+        start_date = parse_date(request.query_params["start_date"])
+        end_date = parse_date(request.query_params["end_date"])
+
+        qs = NowKnowIt.objects.filter(
+            is_active=True,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).order_by("-created_at")
+
+        serializer = NowKnowItSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
