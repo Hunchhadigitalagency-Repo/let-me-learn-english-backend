@@ -82,4 +82,4 @@ class SpeakingActivityDropdownSerializer(serializers.ModelSerializer):
         questions = obj.speakingactivityquestion_set.all()
         if question_type:
             questions = questions.filter(type=question_type)
-        return SpeakingActivityQuestionSerializer(questions, many=True, context=self.context).data
+        return SpeakingActivityQuestionListSerializer(questions, many=True, context=self.context).data
