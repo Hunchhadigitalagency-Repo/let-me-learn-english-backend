@@ -73,10 +73,13 @@ class SpeakingActivityDropdownSerializer(serializers.ModelSerializer):
         model = SpeakingActivity
         fields = ['id', 'title', 'duration', 'instructions', 'questions']
 
+    
     def get_questions(self, obj):
-        # Get type from context (passed from the view)
+       
         question_type = self.context.get('question_type', None)
+
+       
         questions = obj.speakingactivityquestion_set.all()
         if question_type:
             questions = questions.filter(type=question_type)
-        return SpeakingActivityQuestionListSerializer(questions, many=True, context=self.context).data
+        return SpeakingActivityQuestionSerializer(questions, many=True, context=self.context).data
