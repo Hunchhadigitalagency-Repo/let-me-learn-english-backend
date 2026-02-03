@@ -17,7 +17,8 @@ class SpeakingActivityQuestionCreateSerializer(serializers.ModelSerializer):
             'type',
             'attachment',
             'durations',
-            'text_question'
+            'text_question',
+            'instructions'
         ]
 
 
@@ -36,7 +37,8 @@ class SpeakingActivityQuestionListSerializer(serializers.ModelSerializer):
             'type',
             'attachment_url',
             'durations',
-            'text_question'
+            'text_question',
+            'instructions'
         ]
 
     def get_speaking_activity(self, obj):
