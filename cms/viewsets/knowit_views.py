@@ -248,9 +248,15 @@ class NowKnowItDropdownViewSet(viewsets.ViewSet):
         responses={200: NowKnowItSerializer(many=True)}
     )
     def list(self, request):
-        start_date = parse_date(request.query_params.get("start_date"))
-        end_date = parse_date(request.query_params.get("end_date"))
+       
+        start_date_str = request.query_params.get("start_date")
+        end_date_str = request.query_params.get("end_date")
 
+      
+        start_date = parse_date(start_date_str) if start_date_str else None
+        end_date = parse_date(end_date_str) if end_date_str else None
+
+      
         qs = NowKnowIt.objects.filter(is_active=True)
 
        
