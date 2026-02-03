@@ -46,6 +46,7 @@ class SpeakingActivityQuestion(models.Model):
     attachment=models.FileField(upload_to='question_attachment/',null=True,blank=True)
     durations=models.CharField(max_length=255,null=True,blank=True)   
     text_question=models.CharField(max_length=255,null=True,blank=True) 
+    instructions=models.CharField(max_length=255,null=True,blank=True)
     
     def __str__(self):
         return f"{self.speaking_activity}"
