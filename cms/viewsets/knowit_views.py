@@ -214,9 +214,19 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         
     
 
-    @action(detail=False, methods=["get"], url_path="dropdown")
+
+from rest_framework.permissions import IsAuthenticated
+
+
+from cms.models import NowKnowIt
+from cms.serializers.knowit_serializers import NowKnowItSerializer
+
+class NowKnowItDropdownViewSet(viewsets.ViewSet):
+   
+    permission_classes = [IsAuthenticated]  
+
     @swagger_auto_schema(
-        operation_description="Dropdown list using NowKnowItSerializer filtered by date range",
+        operation_description="Dropdown list of NowKnowIt filtered by date range",
         manual_parameters=[
             openapi.Parameter(
                 'start_date',
@@ -237,15 +247,19 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         ],
         responses={200: NowKnowItSerializer(many=True)}
     )
-    def dropdown(self, request):
-        start_date = parse_date(request.query_params["start_date"])
-        end_date = parse_date(request.query_params["end_date"])
+    def list(self, request):
+        start_date = parse_date(request.query_params.get("start_date"))
+        end_date = parse_date(request.query_params.get("end_date"))
 
-        qs = NowKnowIt.objects.filter(
-            is_active=True,
-            created_at__date__gte=start_date,
-            created_at__date__lte=end_date
-        ).order_by("-created_at")
+        qs = NowKnowIt.objects.filter(is_active=True)
 
+       
+        if start_date and end_date:
+            qs = qs.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date
+            )
+
+        qs = qs.order_by("-created_at")
         serializer = NowKnowItSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
