@@ -12,6 +12,7 @@ from tasks.viewsets.listening_activity_views import ListeningActivityViewSet
 from tasks.viewsets.listening_activity_question_views import ListeningActivityQuestionViewSet
 from tasks.viewsets.writing_activity_views import WritingActivityViewSet
 from tasks.viewsets.speaking_activity_views import SpeakingActivityDropdownViewSet
+from tasks.viewsets.listening_activity_views import ListeningActivityDropdownViewSet
 # Create the router
 router = DefaultRouter()
 
@@ -28,6 +29,7 @@ router.register(r'writing-activities', WritingActivityViewSet, basename='writing
 router.register(r'nested-tasks', IELTSTaskViewSet, basename='nested-tasks')
 router.register(r'speaking-activity-dropdown', SpeakingActivityDropdownViewSet, basename='speaking-activity-dropdown')
 router.register(r'reading-activity-dropdown',ReadingActivityDropdownViewSet,basename='reading-activity-dropdown')
+router.register(r'listening-activity-dropdown',ListeningActivityDropdownViewSet,basename='listening-activity-dropdown')
 
 
 # Use router.urls in urlpatterns
