@@ -10,6 +10,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.decorators import action
+
 from utils.decorators import has_permission
 class NowKnowItViewSet(viewsets.ModelViewSet):
     
@@ -208,3 +210,16 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
             {"detail": "Deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+        
+        
+    @action(detail=False, methods=["get"], url_path="dropdown")
+   
+    @swagger_auto_schema(
+        operation_description="Dropdown list using NowKnowItSerializer",
+        responses={200: NowKnowItSerializer(many=True)}
+    )
+    def dropdown(self, request):
+        qs = NowKnowIt.objects.filter(is_active=True).order_by("-created_at")
+
+        serializer = NowKnowItSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
