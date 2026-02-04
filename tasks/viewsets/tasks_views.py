@@ -100,7 +100,36 @@ class TaskViewSet(viewsets.ViewSet):
 
         grade = user.userprofile.grade
 
-        # Get the last completed task progress for this user, ordered by task id
+        # Check if the user has an incomplete task (not all activities done)
+        incomplete_progress = (
+            UserTaskProgress.objects
+            .filter(user_id=user.id, task__grade=grade)
+            .exclude(
+                did_completed_speaking_activity=True,
+                did_completed_reading_activity=True,
+                did_completed_listening_activity=True,
+                did_completed_writing_activity=True,
+            )
+            .order_by('-task__id')
+            .first()
+        )
+
+        if incomplete_progress:
+            # User still has an in-progress task — return it with progress data
+            serializer = TaskSerializer(incomplete_progress.task, context={'request': request})
+            return Response({
+                **serializer.data,
+                "progress": {
+                    "id": incomplete_progress.id,
+                    "did_completed_speaking_activity": incomplete_progress.did_completed_speaking_activity,
+                    "did_completed_reading_activity": incomplete_progress.did_completed_reading_activity,
+                    "did_completed_listening_activity": incomplete_progress.did_completed_listening_activity,
+                    "did_completed_writing_activity": incomplete_progress.did_completed_writing_activity,
+                    "last_updated": incomplete_progress.last_updated,
+                },
+            })
+
+        # All previous tasks are fully completed — find the last one
         last_progress = (
             UserTaskProgress.objects
             .filter(user_id=user.id, task__grade=grade)
@@ -109,7 +138,7 @@ class TaskViewSet(viewsets.ViewSet):
         )
 
         if last_progress:
-            # Get the next task after the last one the user worked on
+            # Get the next task after the last completed one
             next_task = (
                 Task.objects
                 .filter(grade=grade, id__gt=last_progress.task_id)
