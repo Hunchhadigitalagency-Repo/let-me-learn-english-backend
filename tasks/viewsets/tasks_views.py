@@ -1,7 +1,8 @@
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from tasks.models import Task, SpeakingActivity, speakingActivitySample
+from tasks.models import Task, SpeakingActivity, speakingActivitySample, UserTaskProgress
 from tasks.serializers.task_serializers import TaskSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -75,4 +76,61 @@ class TaskViewSet(viewsets.ViewSet):
         task = get_object_or_404(Task, pk=pk)
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Get next task for the authenticated user based on grade and progress
+    @action(detail=False, methods=['get'], url_path='next-task')
+    @swagger_auto_schema(
+        operation_description="Get the next task for the authenticated user based on their grade and progress",
+        responses={200: TaskSerializer(), 404: "No tasks available"}
+    )
+    def get_next_task(self, request):
+        user = request.user
+
+        if not user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if not hasattr(user, 'userprofile') or not user.userprofile.grade:
+            return Response(
+                {"detail": "User grade is not set"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        grade = user.userprofile.grade
+
+        # Get the last completed task progress for this user, ordered by task id
+        last_progress = (
+            UserTaskProgress.objects
+            .filter(user_id=user.id, task__grade=grade)
+            .order_by('-task__id')
+            .first()
+        )
+
+        if last_progress:
+            # Get the next task after the last one the user worked on
+            next_task = (
+                Task.objects
+                .filter(grade=grade, id__gt=last_progress.task_id)
+                .order_by('id')
+                .first()
+            )
+        else:
+            # No progress yet — return the first task for this grade
+            next_task = (
+                Task.objects
+                .filter(grade=grade)
+                .order_by('id')
+                .first()
+            )
+
+        if not next_task:
+            return Response(
+                {"detail": "No more tasks available for this grade"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TaskSerializer(next_task, context={'request': request})
+        return Response(serializer.data)
 

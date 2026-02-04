@@ -18,7 +18,7 @@ COMPOSE_CMD=docker-compose --env-file $(ENV_FILE) -f $(DOCKER_COMPOSE) --project
 
 # Build Docker images
 build:
-	$(COMPOSE_CMD) build
+	$(COMPOSE_CMD) build --no-cache
 
 # Start services
 up:
@@ -41,7 +41,7 @@ shell:
 
 # Rebuild and start
 up-build:
-	$(COMPOSE_CMD) up -d --build
+	$(COMPOSE_CMD) up -d --build 
 
 # --------------------------------------
 # Django Commands

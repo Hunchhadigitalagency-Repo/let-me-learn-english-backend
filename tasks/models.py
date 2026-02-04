@@ -125,5 +125,14 @@ class WritingActivity(models.Model):
         return self.title
     
     
-    
-    
+class UserTaskProgress(models.Model):
+    user_id = models.IntegerField()
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    did_completed_speaking_activity = models.BooleanField(default=False)
+    did_completed_reading_activity = models.BooleanField(default=False)
+    did_completed_listening_activity = models.BooleanField(default=False)
+    did_completed_writing_activity = models.BooleanField(default=False)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"User {self.user_id} - Task {self.task.name} - Progress {self.progress}%"
