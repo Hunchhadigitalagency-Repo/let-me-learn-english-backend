@@ -5,7 +5,9 @@ from tasks.models import Task, SpeakingActivity, speakingActivitySample
 from tasks.serializers.task_serializers import TaskSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
 
+from utils.paginator import CustomPageNumberPagination
 # ------------------------------
 # Task ViewSet
 # ------------------------------
@@ -13,7 +15,8 @@ class TaskViewSet(viewsets.ViewSet):
     """
     A ViewSet for listing, creating, retrieving, updating, and deleting Tasks
     """
-    permission_classes = []  # Define your permissions here
+    permission_classes = [IsAuthenticated]  # Define your permissions here
+    pagination_class = CustomPageNumberPagination
     # List all tasks
     @swagger_auto_schema(
         operation_description="List all tasks",
@@ -21,7 +24,15 @@ class TaskViewSet(viewsets.ViewSet):
     )
     def list(self, request):
         tasks = Task.objects.all().order_by('-id')
-        serializer = TaskSerializer(tasks, many=True,context={'request': request})
+
+        paginator = self.pagination_class()   
+        page = paginator.paginate_queryset(tasks, request)
+
+        if page is not None:
+            serializer = TaskSerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = TaskSerializer(tasks, many=True, context={'request': request})
         return Response(serializer.data)
 
     # Retrieve single task
