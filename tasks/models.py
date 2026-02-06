@@ -121,7 +121,7 @@ class WritingActivity(models.Model):
     title=models.CharField(max_length=255)
     duration=models.CharField(max_length=255,null=True,blank=True)
     instruction=models.TextField()
-    writing_sample=models.CharField(max_length=255)
+    writing_sample=models.TextField(null=True,blank=True)
     issue=models.TextField(null=True,blank=True)
     
     
