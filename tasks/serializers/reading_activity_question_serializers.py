@@ -8,17 +8,7 @@ from tasks.models import ReadingAcitivityQuestion, ReadingActivity
 class ReadingActivityQuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingAcitivityQuestion
-        fields = [
-            'id',
-            'reading_activity',  
-            'question',
-            'answer_1',
-            'answer_2',
-            'answer_3',
-            'answer_4',
-            'is_correct_answer',
-            'type',
-        ]
+        fields = '__all__'
 
 
 # --------------------------
@@ -30,17 +20,7 @@ class ReadingActivityQuestionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingAcitivityQuestion
-        fields = [
-            'id',
-            'reading_activity',  # full info
-            'question',
-            'answer_1',
-            'answer_2',
-            'answer_3',
-            'answer_4',
-            'is_correct_answer',
-            'type',
-        ]
+        fields = '__all__'
 
     def get_reading_activity(self, obj):
         if obj.reading_activity:

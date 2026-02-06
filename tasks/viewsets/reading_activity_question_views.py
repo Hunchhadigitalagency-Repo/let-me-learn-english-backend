@@ -27,12 +27,14 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         responses={200: ReadingActivityQuestionListSerializer(many=True)}
     )
     def list(self, request):
-        queryset = ReadingAcitivityQuestion.objects.all().order_by('-id')
-
         reading_activity_id = request.query_params.get("reading_activity_id")
 
-        if reading_activity_id:
-            queryset = queryset.filter(reading_activity_id=reading_activity_id)
+        if not reading_activity_id:
+            return Response([])
+
+        queryset = ReadingAcitivityQuestion.objects.filter(
+            reading_activity_id=reading_activity_id
+        ).order_by('-id')
 
         serializer_class = self.get_serializer_class('list')
         serializer = serializer_class(
@@ -42,6 +44,7 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         )
 
         return Response(serializer.data)
+
 
     # Retrieve a single question
     @has_permission("can_read_readingactivityquestion")
