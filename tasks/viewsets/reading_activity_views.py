@@ -1,5 +1,6 @@
 # tasks/viewsets/reading_views.py
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from tasks.models import ReadingActivity
@@ -119,6 +120,46 @@ class ReadingActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(ReadingActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @has_permission("can_read_readingactivity")
+    @action(detail=False, methods=["get"], url_path=r"by-task/(?P<task_id>[^/.]+)")
+    @swagger_auto_schema(
+        operation_description="Retrieve the reading activity for a given task ID",
+        manual_parameters=[
+            openapi.Parameter(
+                name="task_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                required=True,
+                description="Task ID to fetch reading activity for",
+            )
+        ],
+        responses={200: ReadingActivityListSerializer(), 404: "Not Found", 409: "Conflict"},
+    )
+    def by_task_id(self, request, task_id=None):
+        """
+        Return the reading activity for the given task_id.
+        Route: /reading-activities/by-task/{task_id}/
+        """
+        qs = ReadingActivity.objects.filter(task_id=task_id).order_by("-id")
+        if not qs.exists():
+            return Response(
+                {"detail": "Reading activity not found for the given task_id"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if qs.count() > 1:
+            return Response(
+                {
+                    "detail": "Multiple reading activities found for the given task_id. Expected only one."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        activity = qs.first()
+        serializer_class = self.get_serializer_class("retrieve")
+        serializer = serializer_class(activity, context={"request": request})
+        return Response(serializer.data)
     
     
     
