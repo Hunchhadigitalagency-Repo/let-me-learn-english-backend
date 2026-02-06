@@ -1,5 +1,6 @@
 # tasks/viewsets/writing_views.py
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from tasks.models import WritingActivity
@@ -10,7 +11,6 @@ from tasks.serializers.writing_activity_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from utils.decorators import has_permission
 from utils.decorators import has_permission
 class WritingActivityViewSet(viewsets.ViewSet):
     """
@@ -107,3 +107,42 @@ class WritingActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(WritingActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @has_permission("can_read_writingactivity")
+    @action(detail=False, methods=["get"], url_path=r"by-task/(?P<task_id>[^/.]+)")
+    @swagger_auto_schema(
+        operation_description="Retrieve the writing activity for a given task ID",
+        manual_parameters=[
+            openapi.Parameter(
+                name="task_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                required=True,
+                description="Task ID to fetch writing activity for",
+            )
+        ],
+        responses={200: WritingActivityListSerializer(), 404: "Not Found", 409: "Conflict"},
+    )
+    def by_task_id(self, request, task_id=None):
+        """
+        Return the writing activity for the given task_id.
+        Route: /writing-activities/by-task/{task_id}/
+        """
+        qs = WritingActivity.objects.filter(task_id=task_id).order_by("-id")
+        if not qs.exists():
+            return Response(
+                {"detail": "Writing activity not found for the given task_id"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if qs.count() > 1:
+            return Response(
+                {
+                    "detail": "Multiple writing activities found for the given task_id. Expected only one."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        activity = qs.first()
+        serializer_class = self.get_serializer_class("retrieve")
+        serializer = serializer_class(activity, context={"request": request})
+        return Response(serializer.data)
