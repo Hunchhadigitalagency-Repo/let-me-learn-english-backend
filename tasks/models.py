@@ -17,6 +17,7 @@ class Task(models.Model):
     
 class SpeakingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
+    instruction=models.CharField(max_length=255, blank=True, null=True)
     title=models.CharField(max_length=255)
     duration=models.CharField(max_length=255,null=True,blank=True)
     instructions=models.TextField()
@@ -42,6 +43,7 @@ class speakingActivitySample(models.Model):
     
 class SpeakingActivityQuestion(models.Model):
     speaking_activity=models.ForeignKey(SpeakingActivity,on_delete=models.CASCADE,null=True,blank=True)
+    instruction=models.CharField(max_length=255, blank=True, null=True)
     type=models.CharField(max_length=255,choices=SPEAKING_CHOICES)
     attachment=models.FileField(upload_to='question_attachment/',null=True,blank=True)
     durations=models.CharField(max_length=255,null=True,blank=True)   
@@ -73,6 +75,7 @@ READ_TYPE=[
 
 class ReadingAcitivityQuestion(models.Model):
     reading_activity=models.ForeignKey(ReadingActivity,on_delete=models.CASCADE,null=True,blank=True)
+    instruction=models.CharField(max_length=255, blank=True, null=True)
     question=models.CharField(max_length=255)
     answer_1=models.CharField(max_length=255, blank=True, null=True)
     answer_2=models.CharField(max_length=255, blank=True, null=True)

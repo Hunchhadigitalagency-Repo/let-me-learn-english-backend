@@ -26,13 +26,23 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         responses={200: ReadingActivityQuestionListSerializer(many=True)}
     )
     def list(self, request):
-        questions = ReadingAcitivityQuestion.objects.all().order_by('-id')
+        queryset = ReadingAcitivityQuestion.objects.all().order_by('-id')
+
+        reading_activity_id = request.query_params.get("reading_activity_id")
+
+        if reading_activity_id:
+            queryset = queryset.filter(reading_activity_id=reading_activity_id)
 
         paginator = CustomPageNumberPagination()
-        paginated_questions = paginator.paginate_queryset(questions, request)
+        paginated_questions = paginator.paginate_queryset(queryset, request)
 
         serializer_class = self.get_serializer_class('list')
-        serializer = serializer_class(paginated_questions, many=True, context={'request': request})
+        serializer = serializer_class(
+            paginated_questions,
+            many=True,
+            context={'request': request}
+        )
+
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single question
