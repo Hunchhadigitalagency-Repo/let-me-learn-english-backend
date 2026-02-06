@@ -118,7 +118,7 @@ class ListeningActivityQuestion(models.Model):
     
 class WritingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
-    title=models.CharField(max_length=255)
+    title=models.TextField(null=True,blank=True)
     duration=models.CharField(max_length=255,null=True,blank=True)
     instruction=models.TextField()
     writing_sample=models.TextField(null=True,blank=True)
