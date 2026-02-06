@@ -116,14 +116,13 @@ class ListeningActivityQuestion(models.Model):
     def __str__(self):
         return self.question
     
-    
-    
 class WritingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     title=models.CharField(max_length=255)
     duration=models.CharField(max_length=255,null=True,blank=True)
     instruction=models.TextField()
     writing_sample=models.CharField(max_length=255)
+    issue=models.TextField(null=True,blank=True)
     
     
     def __str__(self):
