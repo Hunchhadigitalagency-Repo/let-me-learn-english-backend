@@ -67,17 +67,17 @@ READ_TYPE=[
     ('true_false','True_False'),
     ('mcq','MCQ'),
     ('note_completion','NoteCompletion'),
-    ('sentence_Completion','SentenceCompletion'),
+    ('sentence_completion','SentenceCompletion'),
     ('summary_completion','SummaryCompletion')
 ]
 
 class ReadingAcitivityQuestion(models.Model):
     reading_activity=models.ForeignKey(ReadingActivity,on_delete=models.CASCADE,null=True,blank=True)
     question=models.CharField(max_length=255)
-    answer_1=models.CharField(max_length=255)
-    answer_2=models.CharField(max_length=255)
-    answer_3=models.CharField(max_length=255)
-    answer_4=models.CharField(max_length=255)
+    answer_1=models.CharField(max_length=255, blank=True, null=True)
+    answer_2=models.CharField(max_length=255, blank=True, null=True)
+    answer_3=models.CharField(max_length=255, blank=True, null=True)
+    answer_4=models.CharField(max_length=255, blank=True, null=True)
     is_correct_answer=models.CharField(max_length=255)
     type=models.CharField(max_length=255,choices=READ_TYPE)
     
