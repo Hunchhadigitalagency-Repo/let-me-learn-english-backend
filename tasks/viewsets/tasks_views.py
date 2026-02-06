@@ -7,6 +7,7 @@ from tasks.serializers.task_serializers import TaskSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
+from django.utils.dateparse import parse_date
 
 from utils.paginator import CustomPageNumberPagination, TeNPageNumberPagination
 from utils.decorators import has_permission
@@ -19,7 +20,6 @@ class TaskViewSet(viewsets.ViewSet):
     """
     permission_classes = [IsAuthenticated]  # Define your permissions here
     pagination_class = TeNPageNumberPagination
-    # List all tasks
     @has_permission("can_read_task")
     @swagger_auto_schema(
         operation_description="List all tasks",
@@ -28,7 +28,31 @@ class TaskViewSet(viewsets.ViewSet):
     def list(self, request):
         tasks = Task.objects.all().order_by('-id')
 
-        paginator = self.pagination_class()   
+        # ---- Query Params ----
+        search = request.query_params.get("search")
+        grade = request.query_params.get("grade")
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+
+        # ---- Filtering ----
+        if search:
+            tasks = tasks.filter(name__icontains=search)
+
+        if grade:
+            tasks = tasks.filter(grade=grade)
+
+        if start_date:
+            parsed_start = parse_date(start_date)
+            if parsed_start:
+                tasks = tasks.filter(created_at__date__gte=parsed_start)
+
+        if end_date:
+            parsed_end = parse_date(end_date)
+            if parsed_end:
+                tasks = tasks.filter(created_at__date__lte=parsed_end)
+
+        # ---- Pagination ----
+        paginator = self.pagination_class()
         page = paginator.paginate_queryset(tasks, request)
 
         if page is not None:
