@@ -8,7 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
 
-from utils.paginator import CustomPageNumberPagination
+from utils.paginator import CustomPageNumberPagination, TeNPageNumberPagination
 from utils.decorators import has_permission
 # ------------------------------
 # Task ViewSet
@@ -18,7 +18,7 @@ class TaskViewSet(viewsets.ViewSet):
     A ViewSet for listing, creating, retrieving, updating, and deleting Tasks
     """
     permission_classes = [IsAuthenticated]  # Define your permissions here
-    pagination_class = CustomPageNumberPagination
+    pagination_class = TeNPageNumberPagination
     # List all tasks
     @has_permission("can_read_task")
     @swagger_auto_schema(
