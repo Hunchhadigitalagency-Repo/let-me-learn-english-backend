@@ -56,6 +56,7 @@ class ReadingActivity(models.Model):
     title=models.CharField(max_length=255)
     duration=models.CharField(max_length=255,null=True,blank=True)
     passage=models.TextField()
+    instruction=models.TextField(blank=True,null=True)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
     
     def __str__(self):

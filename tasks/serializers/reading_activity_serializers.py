@@ -14,6 +14,7 @@ class ReadingActivityCreateSerializer(serializers.ModelSerializer):
             'task',       # pass task as ID
             'title',
             'duration',
+            'instruction',
             'passage'
         ]
 
@@ -32,6 +33,7 @@ class ReadingActivityListSerializer(serializers.ModelSerializer):
             'task',
             'title',
             'duration',
+            'instruction',
             'passage'
         ]
 
@@ -54,4 +56,4 @@ class ReadingActivityDropdownSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ReadingActivity
-        fields = ['id','task', 'title', 'duration', 'passage','questions']
+        fields = ['id','task', 'title', 'duration', 'passage', 'instruction', 'questions']
