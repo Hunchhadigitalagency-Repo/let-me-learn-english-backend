@@ -6,6 +6,8 @@ from cms.viewsets.expand_vocab_views import ExpandVocabViewSet
 from cms.viewsets.newsletter_views import NewsletterViewSet
 from cms.viewsets.knowit_views import NowKnowItViewSet
 from cms.viewsets.video_views import VideoViewSet
+from cms.viewsets.expand_vocab_views import ExpandVocabDropdownViewSet
+from cms.viewsets.knowit_views import NowKnowItDropdownViewSet
 router = DefaultRouter()
 router.register(r'blog-categories', BlogCategoryViewSet, basename='category')
 router.register(r'blogs', BlogViewSet, basename='blog')
@@ -14,6 +16,7 @@ router.register(r'newsletters', NewsletterViewSet, basename='newsletter')
 router.register(r'nowknowit', NowKnowItViewSet, basename='nowknowit')
 router.register(r'videos', VideoViewSet, basename='videos')
 router.register(r'expand-vocab', ExpandVocabViewSet, basename='expand-vocab')
-
+router.register(r'nowknowit-dropdown', NowKnowItDropdownViewSet, basename='nowknowit-dropdown')
+router.register(r'expandvocabs-dropdown', ExpandVocabDropdownViewSet, basename='expandvocab-dropdown')
 
 urlpatterns = router.urls

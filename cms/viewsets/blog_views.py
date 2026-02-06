@@ -6,7 +6,7 @@ from cms.serializers.blog_serializers import BlogCreateSerializer, BlogListSeria
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from utils.decorators import has_permission
 
 class BlogViewSet(viewsets.ViewSet):
     lookup_field = 'slug'
@@ -18,9 +18,11 @@ class BlogViewSet(viewsets.ViewSet):
         return BlogCreateSerializer
 
     def get_queryset(self):
-        return Blog.objects.all().order_by('-created_at')
+       
+        return Blog.objects.select_related('category').all().order_by('-id')
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_blog")
     @swagger_auto_schema(
         operation_description="List all blogs with pagination (latest first)",
         responses={200: BlogListSerializer(many=True)}
@@ -42,6 +44,7 @@ class BlogViewSet(viewsets.ViewSet):
         })
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_blog")
     @swagger_auto_schema(
         operation_description="Retrieve a single blog by slug",
         manual_parameters=[
@@ -69,6 +72,7 @@ class BlogViewSet(viewsets.ViewSet):
         })
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_blog")
     @swagger_auto_schema(
         operation_description="Create a new blog",
         request_body=BlogCreateSerializer,
@@ -91,6 +95,7 @@ class BlogViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_blog")
     @swagger_auto_schema(
         operation_description="Update a blog completely by slug",
         manual_parameters=[
@@ -126,6 +131,8 @@ class BlogViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_blog")
+    
     @swagger_auto_schema(
         operation_description="Partially update a blog by slug",
         manual_parameters=[
@@ -161,6 +168,7 @@ class BlogViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_blog")
     @swagger_auto_schema(
         operation_description="Delete a blog by slug",
         manual_parameters=[

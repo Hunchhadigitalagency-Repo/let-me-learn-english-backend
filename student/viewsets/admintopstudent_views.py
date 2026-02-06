@@ -7,6 +7,7 @@ from student.serializers.admin_student_serializers import StudentSerializer
 from utils.permissions import IsAdminUserType
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class TopStudentViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsAdminUserType]
     school_param = openapi.Parameter(
@@ -24,36 +25,42 @@ class TopStudentViewSet(viewsets.ViewSet):
         description="Search top students by name or email",
         type=openapi.TYPE_STRING
     )
-
+    @has_permission("can_read_topstudent")
     @swagger_auto_schema(
         manual_parameters=[school_param, grade_param, search_param],
         responses={200: StudentSerializer(many=True)}
     )
 
     def list(self, request):
-        
         school_id = request.query_params.get('school_id')
         grade = request.query_params.get('grade')
         search_query = request.query_params.get('search', '').strip()
 
-       
-        students_qs = User.objects.filter(userprofile__user_type='student')
+        students_qs = (
+            User.objects
+            .filter(userprofile__user_type='student')
+            .select_related('userprofile')
+            .prefetch_related('student_school_relations__school')
+            .distinct()
+        )
 
-       
         if school_id:
-            students_qs = students_qs.filter(student_school_relations__school_id=school_id)
+            students_qs = students_qs.filter(
+                student_school_relations__school_id=school_id
+            )
 
-
-       
         if grade:
-            students_qs = students_qs.filter(userprofile__grade__iexact=grade)
+            students_qs = students_qs.filter(
+                userprofile__grade__iexact=grade
+            )
 
-       
         if search_query:
             students_qs = students_qs.filter(
                 Q(name__icontains=search_query) |
                 Q(email__icontains=search_query)
             )
 
-        serializer = StudentSerializer(students_qs, many=True, context={'request': request})
+        serializer = StudentSerializer(
+            students_qs, many=True, context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)

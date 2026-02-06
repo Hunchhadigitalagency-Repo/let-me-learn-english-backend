@@ -7,11 +7,11 @@ from cms.models import ExpandVocab
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from rest_framework.permissions import AllowAny
 from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
 from utils.paginator import CustomPageNumberPagination
-
-
+from rest_framework.decorators import action
+from utils.decorators import has_permission
 class ExpandVocabViewSet(ModelViewSet):
     
     queryset = ExpandVocab.objects.all().order_by('word')
@@ -40,6 +40,7 @@ class ExpandVocabViewSet(ModelViewSet):
     ordering_fields = ['created_at', 'updated_at', 'word']
 
     # ---------- Swagger Overrides ----------
+    @has_permission("can_read_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -48,6 +49,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+    
+    @has_permission("can_write_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -56,7 +59,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
-
+    
+    @has_permission("can_read_expandvocab")
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
         operation_summary="Retrieve Expand Vocabulary",
@@ -64,6 +68,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
+    
+    @has_permission("can_update_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -72,7 +78,7 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
-
+    @has_permission("can_update_expandvocab")
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
         operation_summary="Partial Update Expand Vocabulary",
@@ -80,6 +86,8 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+    
+    @has_permission("can_delete_expandvocab")
 
     @swagger_auto_schema(
         tags=['admin.expandvocab'],
@@ -88,3 +96,70 @@ class ExpandVocabViewSet(ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+    
+    
+    
+    
+    
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils.dateparse import parse_date
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from cms.models import ExpandVocab
+from cms.serializers.expand_vocab_serializers import ExpandVocabSerializer
+
+class ExpandVocabDropdownViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for returning ExpandVocab dropdown filtered by date range.
+    Only accessible to authenticated users with proper permission.
+    """
+    permission_classes = [IsAuthenticated]  
+
+    @swagger_auto_schema(
+        operation_description="Dropdown list of ExpandVocab filtered by date range",
+        manual_parameters=[
+            openapi.Parameter(
+                'start_date',
+                openapi.IN_QUERY,
+                description="Filter entries created on or after this date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+            openapi.Parameter(
+                'end_date',
+                openapi.IN_QUERY,
+                description="Filter entries created on or before this date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+        ],
+        responses={200: ExpandVocabSerializer(many=True)}
+    )
+    def list(self, request):
+       
+        start_date_str = request.query_params.get("start_date")
+        end_date_str = request.query_params.get("end_date")
+
+      
+        start_date = parse_date(start_date_str) if start_date_str else None
+        end_date = parse_date(end_date_str) if end_date_str else None
+
+        qs = ExpandVocab.objects.filter(is_active=True)
+
+       
+        if start_date and end_date:
+            qs = qs.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date
+            )
+
+        qs = qs.order_by('word')
+        serializer = ExpandVocabSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+

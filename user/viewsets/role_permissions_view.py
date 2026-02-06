@@ -42,7 +42,7 @@ class RoleDropdownViewSet(viewsets.ViewSet):
 
 
 class RolePermissionViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated, HasAnyCustomPermission]
+    permission_classes = [IsAuthenticated]
     required_permissions = {
         "can_read_roles",
         "can_write_roles",
@@ -67,7 +67,7 @@ class RolePermissionViewSet(viewsets.ViewSet):
                         {'error': 'Role not found or does not belong to the user\'s .'},
                         status=status.HTTP_404_NOT_FOUND
                     )
-                serializer = RoleWithPermissionsSerializer(role)
+                serializer = RoleWithPermissionsSerializer(role,context={'request': request})
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
             search_role = request.query_params.get("search_role")

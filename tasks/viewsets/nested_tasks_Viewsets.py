@@ -14,7 +14,7 @@ from tasks.serializers.nested_tasks_Serializers import (
     IELTSSpeakingActivitySerializer,
 )
 
-
+from utils.decorators import has_permission
 class IELTSTaskViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Task.objects.all()
     serializer_class = IELTSTaskSerializer

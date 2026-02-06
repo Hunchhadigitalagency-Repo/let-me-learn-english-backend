@@ -7,9 +7,12 @@ from tasks.serializers.listening_activity_serializers import (
     ListeningActivityCreateSerializer,
     ListeningActivityListSerializer
 )
+from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from utils.paginator import CustomPageNumberPagination
+from utils.decorators import has_permission
+from tasks.serializers.listening_activity_serializers import ListeningActivityDropdownSerializer
 class ListeningActivityViewSet(viewsets.ViewSet):
     
     # Helper to choose serializer depending on action
@@ -18,7 +21,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
             return ListeningActivityListSerializer
         return ListeningActivityCreateSerializer
 
-   
+    @has_permission("can_read_listeningactivity")
     @swagger_auto_schema(
         operation_description="List all listening activities with pagination",
         responses={200: ListeningActivityListSerializer(many=True)}
@@ -39,6 +42,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
 
 
     # Retrieve a single listening activity
+    @has_permission("can_read_listeningactivity")
     @swagger_auto_schema(
         operation_description="Retrieve a single listening activity question by ID",
         responses={200: ListeningActivityListSerializer()}
@@ -50,6 +54,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new listening activity
+    @has_permission("can_write_listeningactivity")
     @swagger_auto_schema(
         operation_description="Create a new listening activity question",
         request_body=ListeningActivityCreateSerializer,
@@ -67,6 +72,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a listening activity completely (PUT)
+    @has_permission("can_update_listeningactivity")
     @swagger_auto_schema(
         operation_description="Update a listening activity question completely",
         request_body=ListeningActivityCreateSerializer,
@@ -86,6 +92,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH)
+    @has_permission("can_update_listeningactivity")
     
     @swagger_auto_schema(
         operation_description="Partially update a listening activity question",
@@ -106,6 +113,7 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a listening activity
+    @has_permission("can_delete_listeningactivity")
     @swagger_auto_schema(
         operation_description="Delete a listening activity question",
         responses={204: "Deleted successfully", 404: "Not Found"}
@@ -115,3 +123,20 @@ class ListeningActivityViewSet(viewsets.ViewSet):
         activity = get_object_or_404(ListeningActivity, pk=pk)
         activity.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+class ListeningActivityDropdownViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+  
+
+  
+    @swagger_auto_schema(
+        operation_description="List all listening activities for dropdown with nested questions",
+        responses={200: ListeningActivityDropdownSerializer(many=True)}
+    )
+    def list(self, request):
+        activities = ListeningActivity.objects.all().order_by('title') 
+        serializer = ListeningActivityDropdownSerializer(activities, many=True, context={'request': request})
+        return Response(serializer.data)
+
+

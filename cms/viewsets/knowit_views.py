@@ -10,6 +10,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.decorators import action
+from django.utils.dateparse import parse_date  
+from utils.decorators import has_permission
 class NowKnowItViewSet(viewsets.ModelViewSet):
     
     queryset = NowKnowIt.objects.all().order_by("-created_at")
@@ -30,6 +33,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'updated_at']
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_knowit")
     @swagger_auto_schema(
         operation_description="List all NowKnowIt items with pagination",
         responses={200: NowKnowItSerializer(many=True)}
@@ -38,6 +42,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_knowit")
     @swagger_auto_schema(
         operation_description="Retrieve a single NowKnowIt item by ID",
         manual_parameters=[
@@ -67,6 +72,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_knowit")
     @swagger_auto_schema(
         operation_description="Create a new NowKnowIt item",
         request_body=NowKnowItSerializer,
@@ -91,6 +97,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_knowit")
     @swagger_auto_schema(
         operation_description="Update a NowKnowIt item completely by ID",
         manual_parameters=[
@@ -129,6 +136,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_knowit")
     @swagger_auto_schema(
         operation_description="Partially update a NowKnowIt item by ID",
         manual_parameters=[
@@ -171,6 +179,7 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
         )
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_knowit")
     @swagger_auto_schema(
         operation_description="Delete a NowKnowIt item by ID",
         manual_parameters=[
@@ -201,3 +210,62 @@ class NowKnowItViewSet(viewsets.ModelViewSet):
             {"detail": "Deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+        
+        
+    
+
+
+from rest_framework.permissions import IsAuthenticated
+
+
+from cms.models import NowKnowIt
+from cms.serializers.knowit_serializers import NowKnowItSerializer
+
+class NowKnowItDropdownViewSet(viewsets.ViewSet):
+   
+    permission_classes = [IsAuthenticated]  
+
+    @swagger_auto_schema(
+        operation_description="Dropdown list of NowKnowIt filtered by date range",
+        manual_parameters=[
+            openapi.Parameter(
+                'start_date',
+                openapi.IN_QUERY,
+                description="Filter items with created_at >= start_date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+            openapi.Parameter(
+                'end_date',
+                openapi.IN_QUERY,
+                description="Filter items with created_at <= end_date (YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+                required=True
+            ),
+        ],
+        responses={200: NowKnowItSerializer(many=True)}
+    )
+    def list(self, request):
+       
+        start_date_str = request.query_params.get("start_date")
+        end_date_str = request.query_params.get("end_date")
+
+      
+        start_date = parse_date(start_date_str) if start_date_str else None
+        end_date = parse_date(end_date_str) if end_date_str else None
+
+      
+        qs = NowKnowIt.objects.filter(is_active=True)
+
+       
+        if start_date and end_date:
+            qs = qs.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date
+            )
+
+        qs = qs.order_by("-created_at")
+        serializer = NowKnowItSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

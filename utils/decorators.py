@@ -2,20 +2,30 @@ from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status
 
-
 def has_permission(permission_name):
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(self, request, *args, **kwargs):
 
             user = request.user
+
             if not user.is_authenticated:
                 return Response(
                     {"detail": "Authentication required"},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
 
-           
+            # ---- SINGLE super-admin check ----
+            is_super_admin = (
+                user.is_superuser or
+                (hasattr(user, "userprofile") and 
+                 user.userprofile.user_type == "superadmin")
+            )
+
+            if is_super_admin:
+                return view_func(self, request, *args, **kwargs)
+
+            # ---- Normal permission check ----
             permissions = (
                 user.roles
                 .filter(is_active=True)

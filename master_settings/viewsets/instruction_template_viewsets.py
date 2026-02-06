@@ -8,14 +8,14 @@ from drf_yasg.utils import swagger_auto_schema
 from master_settings.models import InstructionTemplate
 from master_settings.serializers.instruction_template_serializers import InstructionTemplateSerializer
 
-
+from utils.decorators import has_permission
 
 class InstructionTemplateViewSet(ViewSet):
     """
     Singleton Instruction Template APIs
     """
     permission_classes = [IsAuthenticated]
-
+    @has_permission("can_read_instructions")
     @swagger_auto_schema(
         tags=['admin.instructiontemplate'],
         operation_summary="Get Instruction Template",
@@ -28,7 +28,7 @@ class InstructionTemplateViewSet(ViewSet):
 
         serializer = InstructionTemplateSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    @has_permission("can_write_instructions")
     @swagger_auto_schema(
         tags=['admin.instructiontemplate'],
         operation_summary="Create or Update Instruction Template",

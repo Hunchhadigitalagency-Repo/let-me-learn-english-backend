@@ -13,10 +13,10 @@ from master_settings.serializers.exampause_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from utils.decorators import has_permission
 class ExamPauseViewSet(ModelViewSet):
    
-    queryset = ExamPause.objects.all().order_by('-start_date')
+    queryset = ExamPause.objects.select_related('school').all().order_by('-start_date')
     permission_classes = [IsAuthenticated]
 
     # Pagination
@@ -34,7 +34,7 @@ class ExamPauseViewSet(ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return ExamPauseListSerializer
         return ExamPauseCreateSerializer
-    
+    @has_permission("can_read_exampause")
     @swagger_auto_schema(
         tags=['admin.exampause'],
         operation_summary="List Exam Pauses",
@@ -61,6 +61,8 @@ class ExamPauseViewSet(ModelViewSet):
         serializer = self.get_serializer_class()(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
     
+    @has_permission("can_read_exampause")
+    
     @swagger_auto_schema(
         tags=['admin.exampause'],
         operation_summary="Retrieve Exam Pause",
@@ -82,6 +84,7 @@ class ExamPauseViewSet(ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer_class()(instance, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    @has_permission("can_write_exampause")
     
     @swagger_auto_schema(
         tags=['admin.exampause'],
@@ -97,7 +100,7 @@ class ExamPauseViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+    @has_permission("can_update_exampause")
     @swagger_auto_schema(
         tags=['admin.exampause'],
         operation_summary="Partial Update Exam Pause",
@@ -127,7 +130,7 @@ class ExamPauseViewSet(ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    
+    @has_permission("can_delete_exampause")
     @swagger_auto_schema(
         tags=['admin.exampause'],
         operation_summary="Delete Exam Pause",

@@ -15,3 +15,8 @@ class NowKnowItSerializer(serializers.ModelSerializer):
             'is_active'
         ]
         read_only_fields = ['id']
+        
+        
+        
+        
+# nowknowit/serializers.py

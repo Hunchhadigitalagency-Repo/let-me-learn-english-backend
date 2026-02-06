@@ -6,7 +6,7 @@ from cms.serializers.contactus_serializers import ContactUsSerializer
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from utils.decorators import has_permission
 
 class ContactUsViewSet(viewsets.ViewSet):
     """
@@ -14,9 +14,10 @@ class ContactUsViewSet(viewsets.ViewSet):
     """
 
     def get_queryset(self):
-        return ContactUs.objects.all().order_by('-created_at')
+        return ContactUs.objects.all().order_by('-id')
 
     # ---------------- LIST ----------------
+    @has_permission("can_read_contactus")
     @swagger_auto_schema(
         operation_description="List all contact messages with pagination (latest first)",
         responses={200: ContactUsSerializer(many=True)}
@@ -45,6 +46,7 @@ class ContactUsViewSet(viewsets.ViewSet):
         })
 
     # ---------------- RETRIEVE ----------------
+    @has_permission("can_read_contactus")
     @swagger_auto_schema(
         operation_description="Retrieve a single contact message by ID",
         manual_parameters=[
@@ -72,6 +74,7 @@ class ContactUsViewSet(viewsets.ViewSet):
         })
 
     # ---------------- CREATE ----------------
+    @has_permission("can_write_contactus")
     @swagger_auto_schema(
         operation_description="Create a new contact message",
         request_body=ContactUsSerializer,
@@ -97,6 +100,7 @@ class ContactUsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- UPDATE (PUT) ----------------
+    @has_permission("can_update_contactus")
     @swagger_auto_schema(
         operation_description="Update a contact message completely by ID",
         manual_parameters=[
@@ -133,6 +137,7 @@ class ContactUsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- PARTIAL UPDATE (PATCH) ----------------
+    @has_permission("can_update_contactus")
     @swagger_auto_schema(
         operation_description="Partially update a contact message by ID",
         manual_parameters=[
@@ -172,6 +177,7 @@ class ContactUsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ---------------- DELETE ----------------
+    @has_permission("can_delete_contactus")
     @swagger_auto_schema(
         operation_description="Delete a contact message by ID",
         manual_parameters=[

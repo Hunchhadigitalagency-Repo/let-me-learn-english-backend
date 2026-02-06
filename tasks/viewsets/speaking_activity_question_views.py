@@ -10,6 +10,7 @@ from tasks.serializers.speaking_activity_question_serializers import (
 from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from utils.decorators import has_permission
 class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
     """
     Full CRUD ViewSet for SpeakingActivityQuestion with dynamic serializers and pagination.
@@ -22,6 +23,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return SpeakingActivityQuestionCreateSerializer
 
     # List all questions with pagination
+    @has_permission("can_read_speakingactivityquestion")
     @swagger_auto_schema(
         operation_description="List all speaking activity questions with pagination",
         responses={200: SpeakingActivityQuestionListSerializer(many=True)}
@@ -36,6 +38,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     # Retrieve a single question
+    @has_permission("can_read_speakingactivityquestion")
     @swagger_auto_schema(
         operation_description="Retrieve a single speaking activity question by ID",
         responses={200: SpeakingActivityQuestionListSerializer()}
@@ -47,6 +50,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     # Create a new question
+    @has_permission("can_write_speakingactivityquestion")
     @swagger_auto_schema(
         operation_description="Create a new speaking activity question",
         request_body=SpeakingActivityQuestionCreateSerializer,
@@ -64,6 +68,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Update a question completely (PUT)
+    @has_permission("can_update_speakingactivityquestion")
     @swagger_auto_schema(
         operation_description="Update a speaking activity question completely",
         request_body=SpeakingActivityQuestionCreateSerializer,
@@ -83,6 +88,8 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Partial update (PATCH) with file handling
+    @has_permission("can_update_speakingactivityquestion")
+    
     @swagger_auto_schema(
         operation_description="Partially update a speaking activity question",
         request_body=SpeakingActivityQuestionCreateSerializer,
@@ -109,6 +116,7 @@ class SpeakingActivityQuestionViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete a question
+    @has_permission("can_delete_speakingactivityquestion")
     @swagger_auto_schema(
         operation_description="Delete a speaking activity question",
         responses={204: "Deleted successfully", 404: "Not Found"}
