@@ -9,14 +9,7 @@ from tasks.serializers.reading_activity_question_serializers import ReadingActiv
 class ReadingActivityCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingActivity
-        fields = [
-            'id',
-            'task',       # pass task as ID
-            'title',
-            'duration',
-            'instruction',
-            'passage'
-        ]
+        fields = '__all__'
 
 
 # --------------------------
@@ -28,14 +21,7 @@ class ReadingActivityListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingActivity
-        fields = [
-            'id',
-            'task',
-            'title',
-            'duration',
-            'instruction',
-            'passage'
-        ]
+        fields = '__all__'
 
     def get_task(self, obj):
         if obj.task:
@@ -56,4 +42,4 @@ class ReadingActivityDropdownSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ReadingActivity
-        fields = ['id','task', 'title', 'duration', 'passage', 'instruction', 'questions']
+        fields = '__all__'

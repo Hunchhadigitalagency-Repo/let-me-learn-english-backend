@@ -58,6 +58,7 @@ class ReadingActivity(models.Model):
     passage=models.TextField()
     instruction=models.TextField(blank=True,null=True)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
+    file = models.FileField(upload_to='reading_passage/', null=True, blank=True)
     
     def __str__(self):
         return self.title
