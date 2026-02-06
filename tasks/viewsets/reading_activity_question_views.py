@@ -1,4 +1,5 @@
 # tasks/viewsets/reading_question_views.py
+from urllib import request
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -33,17 +34,14 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         if reading_activity_id:
             queryset = queryset.filter(reading_activity_id=reading_activity_id)
 
-        paginator = CustomPageNumberPagination()
-        paginated_questions = paginator.paginate_queryset(queryset, request)
-
         serializer_class = self.get_serializer_class('list')
         serializer = serializer_class(
-            paginated_questions,
+            queryset,
             many=True,
             context={'request': request}
         )
 
-        return paginator.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
     # Retrieve a single question
     @has_permission("can_read_readingactivityquestion")
