@@ -16,15 +16,42 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     # --------------------------
-    # List all parts
+    # List all parts with filters
     # --------------------------
     @has_permission("can_read_listeningactivitypart")
     @swagger_auto_schema(
-        operation_description="List all listening activity parts with nested questions",
+        operation_description="List all listening activity parts with optional filters for task and part type",
+        manual_parameters=[
+            openapi.Parameter(
+                name='task_id',
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+                required=False,
+                description='Filter parts by ListeningActivity task ID'
+            ),
+            openapi.Parameter(
+                name='part',
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                required=False,
+                description='Filter parts by part type (e.g., Part1-Conversation)'
+            )
+        ],
         responses={200: ListeningActivityPartSerializer(many=True)}
     )
     def list(self, request):
         parts = ListeningActivityPart.objects.all().order_by('id')
+
+        # Apply filters
+        task_id = request.query_params.get('task_id')
+        part_type = request.query_params.get('part')
+
+        if task_id:
+            parts = parts.filter(listening_activity_id=task_id)
+
+        if part_type:
+            parts = parts.filter(part=part_type)
+
         serializer = ListeningActivityPartSerializer(parts, many=True, context={'request': request})
         return Response(serializer.data)
 
