@@ -8,7 +8,7 @@ from tasks.models import WritingActivity
 class WritingActivityCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WritingActivity
-        fields = ['id', 'task', 'title', 'duration', 'instruction', 'writing_sample']
+        fields = ['id', 'task', 'title', 'duration', 'instruction', 'writing_sample', 'issue']
 
 
 # --------------------------
@@ -20,7 +20,7 @@ class WritingActivityListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WritingActivity
-        fields = ['id', 'task', 'title', 'duration', 'instruction', 'writing_sample']
+        fields = ['id', 'task', 'title', 'duration', 'instruction', 'writing_sample', 'issue']
         
     def get_task(self, obj):
         if obj.task:

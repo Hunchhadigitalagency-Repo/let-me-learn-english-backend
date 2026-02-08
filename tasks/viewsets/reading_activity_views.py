@@ -155,7 +155,6 @@ class ReadingActivityViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-
         activity = qs.first()
         serializer_class = self.get_serializer_class("retrieve")
         serializer = serializer_class(activity, context={"request": request})
@@ -165,9 +164,7 @@ class ReadingActivityViewSet(viewsets.ViewSet):
     
 class ReadingActivityDropdownViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
-  
 
-  
     @swagger_auto_schema(
         operation_description="List all speaking activities for dropdown with nested questions",
         responses={200: ReadingActivityDropdownSerializer(many=True)}
