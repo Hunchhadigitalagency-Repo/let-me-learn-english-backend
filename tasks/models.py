@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 from user.models import User
+import uuid
 
 # Create your models here.
 GRADE_CHOICES = [(str(i), str(i)) for i in range(1, 11)]
@@ -112,6 +113,7 @@ READ_TYPE=[
 class ReadingAcitivityQuestion(models.Model):
     reading_activity=models.ForeignKey(ReadingActivity,on_delete=models.CASCADE,null=True,blank=True)
     instruction=models.CharField(max_length=255, blank=True, null=True)
+    bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
     answer_1=models.CharField(max_length=255, blank=True, null=True)
     answer_2=models.CharField(max_length=255, blank=True, null=True)
