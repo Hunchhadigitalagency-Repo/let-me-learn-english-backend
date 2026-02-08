@@ -129,14 +129,38 @@ class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Delete old questions
-        instance.listeningactivityquestion_set.all().delete()
+        # Track IDs of questions from payload
+        sent_question_ids = []
 
-        # Create new questions
-        question_instances = [
-            ListeningActivityQuestion(listening_activity_part=instance, **question_data)
-            for question_data in questions_data
-        ]
-        ListeningActivityQuestion.objects.bulk_create(question_instances)
+        for question_data in questions_data:
+            question_id = question_data.get('id', None)
+
+            if question_id:
+                # Update existing question
+                try:
+                    question_instance = ListeningActivityQuestion.objects.get(
+                        id=question_id,
+                        listening_activity_part=instance
+                    )
+                    for attr, value in question_data.items():
+                        if attr != 'id':
+                            setattr(question_instance, attr, value)
+                    question_instance.save()
+                    sent_question_ids.append(question_instance.id)
+                except ListeningActivityQuestion.DoesNotExist:
+                    # If id does not exist, create new
+                    new_question = ListeningActivityQuestion.objects.create(
+                        listening_activity_part=instance, **question_data
+                    )
+                    sent_question_ids.append(new_question.id)
+            else:
+                # Create new question
+                new_question = ListeningActivityQuestion.objects.create(
+                    listening_activity_part=instance, **question_data
+                )
+                sent_question_ids.append(new_question.id)
+
+        # Optional: Delete questions not in payload
+        instance.listeningactivityquestion_set.exclude(id__in=sent_question_ids).delete()
 
         return instance
