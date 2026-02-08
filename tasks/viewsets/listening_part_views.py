@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from tasks.models import ListeningActivityPart
+from tasks.models import ListeningActivity, ListeningActivityPart
 from tasks.serializers.listening_activity_question_serializers import (
     ListeningActivityPartCreateSerializer,
 )
@@ -20,7 +20,7 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     # --------------------------
     @has_permission("can_read_listeningactivitypart")
     @swagger_auto_schema(
-        operation_description="List all listening activity parts with optional filters for task and part type",
+        operation_description="List all listening activity parts with optional filters by task or part type",
         manual_parameters=[
             openapi.Parameter(
                 name='task_id',
@@ -42,13 +42,14 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     def list(self, request):
         parts = ListeningActivityPart.objects.all().order_by('id')
 
-        # Apply filters
+        # Filter by task_id: get all ListeningActivity for that task
         task_id = request.query_params.get('task_id')
-        part_type = request.query_params.get('part')
-
         if task_id:
-            parts = parts.filter(listening_activity_id=task_id)
+            activities = ListeningActivity.objects.filter(task_id=task_id)
+            parts = parts.filter(listening_activity__in=activities)
 
+        # Optional filter by part type
+        part_type = request.query_params.get('part')
         if part_type:
             parts = parts.filter(part=part_type)
 
