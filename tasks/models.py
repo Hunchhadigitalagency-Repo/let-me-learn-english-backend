@@ -181,6 +181,7 @@ class ListeningActivityPart(models.Model):
     listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
     part=models.CharField(max_length=255,choices=LISTENING_PART_CHOICES)
     audio_file=models.FileField(upload_to='listening_part_file/',null=True,blank=True)
+    duration = models.CharField(max_length=255, null=True, blank=True)
     instruction=models.CharField(max_length=255, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

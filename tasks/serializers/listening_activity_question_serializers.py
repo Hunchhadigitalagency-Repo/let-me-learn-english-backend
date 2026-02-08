@@ -97,6 +97,7 @@ class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
             "part",
             "audio_file",
             "instruction",
+            "duration",
             "questions",
         ]
 
