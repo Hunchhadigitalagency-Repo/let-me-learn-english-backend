@@ -1,6 +1,3 @@
-from django.contrib import admin
-
-# Register your models here.
 # tasks/admin.py
 from django.contrib import admin
 from .models import (
@@ -12,7 +9,16 @@ from .models import (
     ReadingAcitivityQuestion,
     ListeningActivity,
     ListeningActivityQuestion,
-    WritingActivity
+    WritingActivity,
+    StudentSpeakingAttempt,
+    StudentSpeakingAnswer,
+    StudentReadingAttempt,
+    StudentReadingAnswer,
+    StudentListeningAttempt,
+    StudentListeningAnswer,
+    StudentWritingAttempt,
+    StudentWritingAnswer,
+    UserTaskProgress
 )
 
 # ----------------------
@@ -48,7 +54,7 @@ class SpeakingActivitySampleAdmin(admin.ModelAdmin):
 @admin.register(SpeakingActivityQuestion)
 class SpeakingActivityQuestionAdmin(admin.ModelAdmin):
     list_display = ['id', 'speaking_activity', 'type', 'durations']
-    search_fields = ['text_question']
+    search_fields = ['text_question', 'instruction']
     list_filter = ['type', 'speaking_activity']
 
 # ----------------------
@@ -95,3 +101,97 @@ class WritingActivityAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'task', 'duration']
     search_fields = ['title', 'instruction', 'writing_sample']
     list_filter = ['task']
+
+# ----------------------
+# Student Speaking Attempt Admin
+# ----------------------
+@admin.register(StudentSpeakingAttempt)
+class StudentSpeakingAttemptAdmin(admin.ModelAdmin):
+    list_display = ['id', 'student', 'speaking_activity', 'is_completed', 'started_at', 'completed_at']
+    search_fields = ['student__username', 'speaking_activity__title']
+    list_filter = ['is_completed', 'speaking_activity']
+
+# ----------------------
+# Student Speaking Answer Admin
+# ----------------------
+@admin.register(StudentSpeakingAnswer)
+class StudentSpeakingAnswerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'attempt', 'question', 'created_at']
+    search_fields = ['attempt__student__username', 'question__text_question']
+    list_filter = ['question']
+
+# ----------------------
+# Student Reading Attempt Admin
+# ----------------------
+@admin.register(StudentReadingAttempt)
+class StudentReadingAttemptAdmin(admin.ModelAdmin):
+    list_display = ['id', 'student', 'reading_activity', 'is_completed', 'started_at', 'completed_at', 'score']
+    search_fields = ['student__username', 'reading_activity__title']
+    list_filter = ['is_completed', 'reading_activity']
+
+# ----------------------
+# Student Reading Answer Admin
+# ----------------------
+@admin.register(StudentReadingAnswer)
+class StudentReadingAnswerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'attempt', 'question', 'selected_answer', 'is_correct']
+    search_fields = ['attempt__student__username', 'question__question']
+    list_filter = ['is_correct', 'question']
+
+# ----------------------
+# Student Listening Attempt Admin
+# ----------------------
+@admin.register(StudentListeningAttempt)
+class StudentListeningAttemptAdmin(admin.ModelAdmin):
+    list_display = ['id', 'student', 'listening_activity', 'is_completed', 'started_at', 'completed_at', 'score']
+    search_fields = ['student__username', 'listening_activity__title']
+    list_filter = ['is_completed', 'listening_activity']
+
+# ----------------------
+# Student Listening Answer Admin
+# ----------------------
+@admin.register(StudentListeningAnswer)
+class StudentListeningAnswerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'attempt', 'question', 'selected_answer', 'is_correct']
+    search_fields = ['attempt__student__username', 'question__question']
+    list_filter = ['is_correct', 'question']
+
+# ----------------------
+# Student Writing Attempt Admin
+# ----------------------
+@admin.register(StudentWritingAttempt)
+class StudentWritingAttemptAdmin(admin.ModelAdmin):
+    list_display = ['id', 'student', 'writing_activity', 'is_completed', 'started_at', 'completed_at', 'score']
+    search_fields = ['student__username', 'writing_activity__title']
+    list_filter = ['is_completed', 'writing_activity']
+
+# ----------------------
+# Student Writing Answer Admin
+# ----------------------
+@admin.register(StudentWritingAnswer)
+class StudentWritingAnswerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'attempt', 'created_at']
+    search_fields = ['attempt__student__username', 'submission_text']
+    list_filter = ['attempt']
+
+# ----------------------
+# User Task Progress Admin
+# ----------------------
+@admin.register(UserTaskProgress)
+class UserTaskProgressAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'user_id', 'task', 
+        'did_completed_speaking_activity',
+        'did_completed_reading_activity',
+        'did_completed_listening_activity',
+        'did_completed_writing_activity',
+        'last_updated'
+    ]
+    list_filter = [
+        'did_completed_speaking_activity',
+        'did_completed_reading_activity',
+        'did_completed_listening_activity',
+        'did_completed_writing_activity',
+        'task'
+    ]
+    search_fields = ['user_id', 'task__name']
