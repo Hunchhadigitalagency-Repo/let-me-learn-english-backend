@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from tasks.models import ListeningActivityQuestion
-
+import json
 
 # --------------------------
 # Serializer for creating/updating a ListeningActivityQuestion
@@ -87,7 +87,7 @@ class ListeningActivityQuestionListSerializer(serializers.ModelSerializer):
 # Serializer for Creating ListeningActivityPart
 # --------------------------
 class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
-    questions = ListeningActivityQuestionCreateSerializer(many=True)
+    questions = ListeningActivityQuestionCreateSerializer(many=True, required=False)  # <-- here
 
     class Meta:
         model = ListeningActivityPart
@@ -99,6 +99,16 @@ class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
             "instruction",
             "questions",
         ]
+
+    def to_internal_value(self, data):
+        # Parse JSON string for `questions` if it's a string
+        questions = data.get('questions')
+        if isinstance(questions, str):
+            try:
+                data['questions'] = json.loads(questions)
+            except json.JSONDecodeError:
+                data['questions'] = []
+        return super().to_internal_value(data)
 
     # --------------------------
     # Create Part + Nested Questions
@@ -160,7 +170,7 @@ class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
                 )
                 sent_question_ids.append(new_question.id)
 
-        # Optional: Delete questions not in payload
-        instance.listeningactivityquestion_set.exclude(id__in=sent_question_ids).delete()
+        # # Optional: Delete questions not in payload
+        # instance.listeningactivityquestion_set.exclude(id__in=sent_question_ids).delete()
 
         return instance
