@@ -174,6 +174,7 @@ LISTENING_CHOICES=[
 class ListeningActivityQuestion(models.Model):
     listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
     type=models.CharField(max_length=255,choices=LISTENING_CHOICES)
+    bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
     answer_1=models.CharField(max_length=255)
     answer_2=models.CharField(max_length=255)
