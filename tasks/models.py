@@ -166,14 +166,32 @@ class ListeningActivity(models.Model):
     def __str__(self):
         return self.title
     
-LISTENING_CHOICES=[
-    ('part1','part1'),
-    ('form_question','form_question')
-]   
+
+LISTENING_PART_CHOICES=[
+    ('Part1-Conversation ','Part1-Conversation'),
+    ('Part2-Talk ','Part2-Talk'),
+    ('Part3-Lecture ','Part3-Lecture '),
+] 
+LISTENING_QUESTION_TYPE_CHOICES=[
+    ('matching_info','Matching_info'),
+    ('mcq','Mcq'),
+    ('note_completion','Note_completion'),
+]
+class ListeningActivityPart(models.Model):
+    listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
+    part=models.CharField(max_length=255,choices=LISTENING_PART_CHOICES)
+    audio_file=models.FileField(upload_to='listening_part_file/',null=True,blank=True)
+    instruction=models.CharField(max_length=255, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.listening_activity} - {self.part}"
     
 class ListeningActivityQuestion(models.Model):
-    listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
-    type=models.CharField(max_length=255,choices=LISTENING_CHOICES)
+    listening_activity_part=models.ForeignKey(ListeningActivityPart,on_delete=models.CASCADE,null=True,blank=True)
+    question_type = models.CharField(max_length=255,choices=LISTENING_QUESTION_TYPE_CHOICES, blank=True, null=True)
     bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
     answer_1=models.CharField(max_length=255)

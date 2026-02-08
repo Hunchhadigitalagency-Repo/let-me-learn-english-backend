@@ -1,6 +1,7 @@
 # tasks/admin.py
 from django.contrib import admin
 from .models import (
+    ListeningActivityPart,
     Task,
     SpeakingActivity,
     speakingActivitySample,
@@ -89,9 +90,33 @@ class ListeningActivityAdmin(admin.ModelAdmin):
 # ----------------------
 @admin.register(ListeningActivityQuestion)
 class ListeningActivityQuestionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'listening_activity', 'type', 'question']
+    list_display = ['id', 'listening_activity_part', 'question_type', 'question']
     search_fields = ['question']
-    list_filter = ['type', 'listening_activity']
+    list_filter = ['question_type', 'listening_activity_part']
+
+
+# ----------------------
+# Listening Activity Part Admin
+# ----------------------
+@admin.register(ListeningActivityPart)
+class ListeningActivityPartAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'listening_activity',
+        'part',
+        'instruction',
+        'created_at',
+        'updated_at'
+    ]
+    search_fields = [
+        'listening_activity__title',
+        'part',
+        'instruction'
+    ]
+    list_filter = [
+        'part',
+        'listening_activity'
+    ]
 
 # ----------------------
 # Writing Activity Admin
