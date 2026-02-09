@@ -196,10 +196,10 @@ class ListeningActivityQuestion(models.Model):
     question_type = models.CharField(max_length=255,choices=LISTENING_QUESTION_TYPE_CHOICES, blank=True, null=True)
     bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
-    answer_1=models.CharField(max_length=255)
-    answer_2=models.CharField(max_length=255)
-    answer_3=models.CharField(max_length=255)
-    answer_4=models.CharField(max_length=255)
+    answer_1=models.CharField(max_length=255, blank=True, null=True)
+    answer_2=models.CharField(max_length=255, blank=True, null=True)
+    answer_3=models.CharField(max_length=255, blank=True, null=True)
+    answer_4=models.CharField(max_length=255, blank=True, null=True)
     is_correct_answer=models.CharField(max_length=255)
     
     
