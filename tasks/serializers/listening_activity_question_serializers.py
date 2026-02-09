@@ -18,6 +18,8 @@ from tasks.models import ListeningActivityPart, ListeningActivityQuestion
 # Serializer for creating/updating a ListeningActivityQuestion
 # --------------------------
 class ListeningActivityQuestionCreateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
     class Meta:
         model = ListeningActivityQuestion
         fields = [
@@ -122,27 +124,48 @@ class ListeningActivityPartCreateSerializer(serializers.ModelSerializer):
         return part
 
     def update(self, instance, validated_data):
+        print("\n===== UPDATE STARTED =====")
+        print("Instance ID:", instance.id)
+        print("Validated Data:", validated_data)
+
         questions_data = validated_data.pop("questions", [])
+        print("Questions Data Received:", questions_data)
 
         # Update Part fields
         for attr, value in validated_data.items():
+            print(f"Updating field -> {attr}: {value}")
             setattr(instance, attr, value)
         instance.save()
 
-        # Update/Create Questions
         sent_question_ids = []
-        for q_data in questions_data:
-            q_id = q_data.get('id')
-            if q_id:
-                # Update existing
-                ListeningActivityQuestion.objects.filter(id=q_id, listening_activity_part=instance).update(**q_data)
-                sent_question_ids.append(q_id)
-            else:
-                # Create new
-                new_q = ListeningActivityQuestion.objects.create(listening_activity_part=instance, **q_data)
-                sent_question_ids.append(new_q.id)
 
-        # Optional: Delete questions not included in the payload
-        # instance.listeningactivityquestion_set.exclude(id__in=sent_question_ids).delete()
+        for q_data in questions_data:
+            print("\nProcessing Question:", q_data)
+
+            q_id = q_data.get('id')
+
+            if q_id:
+                print(f"Updating existing question ID: {q_id}")
+                ListeningActivityQuestion.objects.filter(
+                    id=q_id,
+                    listening_activity_part=instance
+                ).update(**q_data)
+
+                sent_question_ids.append(q_id)
+
+            else:
+                print("Creating new question")
+                new_q = ListeningActivityQuestion.objects.create(
+                    listening_activity_part=instance,
+                    **q_data
+                )
+                print("New Question ID:", new_q.id)
+                sent_question_ids.append(new_q.id)
+        instance.listeningactivityquestion_set.exclude(id__in=sent_question_ids).delete()
+        print("Deleted questions not in payload")
+
+
+        print("All Processed Question IDs:", sent_question_ids)
+        print("===== UPDATE FINISHED =====\n")
 
         return instance

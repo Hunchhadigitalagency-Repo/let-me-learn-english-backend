@@ -107,7 +107,7 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     # --------------------------
     # Partial update (PATCH) + nested questions
     # --------------------------
-    @has_permission("can_update_listeningactivitypart")
+    # @has_permission("can_update_listeningactivitypart")
     @swagger_auto_schema(
         operation_description="Partially update a listening activity part and replace its questions",
         request_body=ListeningActivityPartCreateSerializer,
@@ -115,6 +115,9 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     )
     def partial_update(self, request, pk=None):
         part = get_object_or_404(ListeningActivityPart, pk=pk)
+        print("\n===== PARTIAL UPDATE STARTED =====")
+        print("Original Part Data:", ListeningActivityPartSerializer(part).data)
+        print("Incoming Data:", request.data)
         serializer = ListeningActivityPartCreateSerializer(part, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             part = serializer.save()
