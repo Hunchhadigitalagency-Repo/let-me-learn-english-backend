@@ -115,9 +115,6 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     )
     def partial_update(self, request, pk=None):
         part = get_object_or_404(ListeningActivityPart, pk=pk)
-        print("\n===== PARTIAL UPDATE STARTED =====")
-        print("Original Part Data:", ListeningActivityPartSerializer(part).data)
-        print("Incoming Data:", request.data)
         serializer = ListeningActivityPartCreateSerializer(part, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             part = serializer.save()
