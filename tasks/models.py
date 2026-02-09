@@ -167,11 +167,12 @@ class ListeningActivity(models.Model):
         return self.title
     
 
-LISTENING_PART_CHOICES=[
-    ('Part1-Conversation ','Part1-Conversation'),
-    ('Part2-Talk ','Part2-Talk'),
-    ('Part3-Lecture ','Part3-Lecture '),
-] 
+LISTENING_PART_CHOICES = [
+    ('Part1-Conversation', 'Part1-Conversation'),
+    ('Part2-Talk', 'Part2-Talk'),
+    ('Part3-Lecture', 'Part3-Lecture'),
+]
+
 LISTENING_QUESTION_TYPE_CHOICES=[
     ('matching_info','Matching_info'),
     ('mcq','Mcq'),

@@ -13,7 +13,7 @@ from utils.decorators import has_permission
 
 
 class ListeningActivityPartViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     # --------------------------
     # List all parts with filters
@@ -72,7 +72,7 @@ class ListeningActivityPartViewSet(viewsets.ViewSet):
     # --------------------------
     # Create a part + nested questions
     # --------------------------
-    @has_permission("can_write_listeningactivitypart")
+    # @has_permission("can_write_listeningactivitypart")
     @swagger_auto_schema(
         operation_description="Create a listening activity part with questions",
         request_body=ListeningActivityPartCreateSerializer,
