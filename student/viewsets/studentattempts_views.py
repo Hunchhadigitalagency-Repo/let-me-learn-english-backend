@@ -9,6 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
 from utils.decorators import has_permission
+from rest_framework.decorators import action
 class StudentAttemptsViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
    
@@ -106,3 +107,32 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         attempt.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], url_path='my-tasks')
+    @has_permission("can_read_studentattempts")
+    def my_tasks(self, request):
+        print("📌 Fetching latest attempt for:", request.user)
+
+        attempt = (
+            StudentAttempts.objects
+            .filter(student=request.user)
+            .select_related('task')
+            .order_by('-started_at')
+            .first()
+        )
+
+        if not attempt:
+            return Response(
+                {"message": "No attempts found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = StudentAttemptsListSerializer(
+            attempt,
+            context={'request': request}
+        )
+
+        return Response({
+            "message": "Student task detail fetched successfully",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
