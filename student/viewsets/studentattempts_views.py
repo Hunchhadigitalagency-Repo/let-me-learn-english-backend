@@ -109,7 +109,6 @@ class StudentAttemptsViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='my-tasks')
-    @has_permission("can_read_studentattempts")
     def my_tasks(self, request):
         print("📌 Fetching latest attempt for:", request.user)
 
