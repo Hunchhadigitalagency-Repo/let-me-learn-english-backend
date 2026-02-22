@@ -24,10 +24,45 @@ from tasks.models import Task
 User = get_user_model()
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class StudentAttemptTaskSerializer(serializers.ModelSerializer):
+    speaking_activity_ids = serializers.SerializerMethodField()
+    reading_activity_ids = serializers.SerializerMethodField()
+    listening_activity_ids = serializers.SerializerMethodField()
+    writing_activity_ids = serializers.SerializerMethodField()
+    from tasks.models import SpeakingActivity, ReadingActivity, ListeningActivity, WritingActivity
+
     class Meta:
         model = Task
-        fields = ['id', 'name', 'description']  
+        fields = [
+            'id',
+            'name',
+            'description',
+            'grade',
+            'speaking_activity_ids',
+            'reading_activity_ids',
+            'listening_activity_ids',
+            'writing_activity_ids'
+        ]
+
+    def get_speaking_activity_ids(self, obj):
+        return list(
+            SpeakingActivity.objects.filter(task=obj).values_list('id', flat=True)
+        )
+
+    def get_reading_activity_ids(self, obj):
+        return list(
+            ReadingActivity.objects.filter(task=obj).values_list('id', flat=True)
+        )
+
+    def get_listening_activity_ids(self, obj):
+        return list(
+            ListeningActivity.objects.filter(task=obj).values_list('id', flat=True)
+        )
+
+    def get_writing_activity_ids(self, obj):
+        return list(
+            WritingActivity.objects.filter(task=obj).values_list('id', flat=True)
+        )
 
 
 class StudentSerializer(serializers.ModelSerializer):
@@ -38,7 +73,7 @@ class StudentSerializer(serializers.ModelSerializer):
 # List serializer with nested fields
 class StudentAttemptsListSerializer(serializers.ModelSerializer):
     student = StudentSerializer(read_only=True)
-    task = TaskSerializer(read_only=True)
+    task = StudentAttemptTaskSerializer(read_only=True)
 
     class Meta:
         model = StudentAttempts

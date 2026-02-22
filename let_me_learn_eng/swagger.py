@@ -9,16 +9,27 @@ from drf_yasg import inspectors
 
 # ✅ 1. Safe SwaggerAutoSchema that prints errors instead of crashing
 class SafeSwaggerAutoSchema(SwaggerAutoSchema):
-    def get_request_body_parameters(self, consumes):
+    def get_operation(self, operation_keys=None):
         try:
-            return super().get_request_body_parameters(consumes)
-        except SwaggerGenerationError as e:
-            view = getattr(self.view, "__class__", self.view)
-            path = getattr(self.view, "action", "unknown action")
+            return super().get_operation(operation_keys)
+        except Exception as e:
+            # This captures the view name, the path, and the method
+            view_class = getattr(self.view, "__class__", self.view)
             method = self.method
-            print(f"[SwaggerGenerationError] view={view}, action={path}, method={method}: {e}")
-            return []  # return empty to continue generation
-
+            path = getattr(self.view, "request", None)
+            path_info = getattr(path, "path", "unknown") if path else "unknown"
+            
+            print("\n" + "="*60)
+            print("❌ SWAGGER ERROR DETECTED")
+            print(f"VIEW CLASS: {view_class}")
+            print(f"METHOD:     {method}")
+            print(f"PATH:       {path_info}")
+            print(f"ERROR:      {str(e)}")
+            print("="*60 + "\n")
+            
+            # Return None so Swagger skips this one broken endpoint 
+            # instead of crashing the whole JSON file
+            return None
 # ✅ 2. Make drf_yasg use this globally
 inspectors.SwaggerAutoSchema = SafeSwaggerAutoSchema
 

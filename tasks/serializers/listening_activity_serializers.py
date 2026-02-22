@@ -1,48 +1,98 @@
-# serializers.py
 from rest_framework import serializers
-from tasks.models import ListeningActivity, ListeningActivityQuestion
-from tasks.models import Task  # To get task name
+from tasks.models import (
+    ListeningActivity,
+    ListeningActivityPart,
+    ListeningActivityQuestion
+)
 from utils.urlsfixer import build_https_url
-from tasks.serializers.listening_activity_question_serializers import ListeningActivityQuestionListSerializer
-# --------------------------
-# ListeningActivityQuestion Serializer
-# --------------------------
+
+
+# ---------------------------------------
+# Listening Activity Question Serializer
+# ---------------------------------------
 class ListeningActivityQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListeningActivityQuestion
-        fields = ['id', 'type', 'question', 'answer_1', 'answer_2', 'answer_3', 'answer_4', 'is_correct_answer']
+        fields = [
+            'id',
+            'question_type',   # ✅ corrected
+            'question',
+            'answer_1',
+            'answer_2',
+            'answer_3',
+            'answer_4',
+            'is_correct_answer'
+        ]
 
 
-# --------------------------
-# ListeningActivity Serializer for Create/Update
-# --------------------------
+# ---------------------------------------
+# Listening Activity Part Serializer
+# ---------------------------------------
+class ListeningActivityPartSerializer(serializers.ModelSerializer):
+    questions = ListeningActivityQuestionSerializer(
+        source='listeningactivityquestion_set',
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = ListeningActivityPart
+        fields = [
+            'id',
+            'part',
+            'instruction',
+            'audio_file',
+            'duration',
+            'questions'
+        ]
+
+
+# ---------------------------------------
+# ListeningActivity Create/Update
+# ---------------------------------------
 class ListeningActivityCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListeningActivity
-        fields = ['id', 'task', 'title', 'duration', 'instruction', 'audio_file']
+        fields = [
+            'id',
+            'task',
+            'title',
+            'duration',
+            'instruction',
+            'audio_file'
+        ]
 
 
-# --------------------------
-# ListeningActivity Serializer for Retrieve/List
-# --------------------------
-# --------------------------
-# ListeningActivity Serializer for Retrieve/List
-# --------------------------
+# ---------------------------------------
+# ListeningActivity List/Retrieve
+# ---------------------------------------
 class ListeningActivityListSerializer(serializers.ModelSerializer):
-    # nested questions
-    questions = ListeningActivityQuestionSerializer(many=True, read_only=True, source='listeningactivityquestion_set')
 
-    # task as {id, name}
+    # Nested Parts (instead of questions directly)
+    parts = ListeningActivityPartSerializer(
+        source='listeningactivitypart_set',
+        many=True,
+        read_only=True
+    )
+
+    # Task as {id, name}
     task = serializers.SerializerMethodField()
 
-    # full URL for audio_file
+    # Full audio file URL
     audio_file = serializers.SerializerMethodField()
 
     class Meta:
         model = ListeningActivity
-        fields = ['id', 'task', 'title', 'duration', 'instruction', 'audio_file', 'questions']
+        fields = [
+            'id',
+            'task',
+            'title',
+            'duration',
+            'instruction',
+            'audio_file',
+            'parts'
+        ]
 
-    # Return task as {id, name}
     def get_task(self, obj):
         if obj.task:
             return {
@@ -51,7 +101,6 @@ class ListeningActivityListSerializer(serializers.ModelSerializer):
             }
         return None
 
-    # Return full URL for audio file
     def get_audio_file(self, obj):
         request = self.context.get('request')
         if obj.audio_file and request:
@@ -61,14 +110,25 @@ class ListeningActivityListSerializer(serializers.ModelSerializer):
         return None
 
 
-
+# ---------------------------------------
+# Dropdown Version (lighter version)
+# ---------------------------------------
 class ListeningActivityDropdownSerializer(serializers.ModelSerializer):
-    questions = ListeningActivityQuestionListSerializer(
-        source='listeningactivityquestion_set',  # NO space here
+
+    parts = ListeningActivityPartSerializer(
+        source='listeningactivitypart_set',
         many=True,
         read_only=True
     )
-    
+
     class Meta:
         model = ListeningActivity
-        fields = ['id', 'task', 'title', 'duration', 'instruction', 'audio_file', 'questions']
+        fields = [
+            'id',
+            'task',
+            'title',
+            'duration',
+            'instruction',
+            'audio_file',
+            'parts'
+        ]

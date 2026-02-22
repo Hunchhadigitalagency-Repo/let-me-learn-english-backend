@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils import timezone
 
+from user.models import User
+import uuid
+
 # Create your models here.
 GRADE_CHOICES = [(str(i), str(i)) for i in range(1, 11)]
 class Task(models.Model):
@@ -53,6 +56,40 @@ class SpeakingActivityQuestion(models.Model):
     def __str__(self):
         return f"{self.speaking_activity}"
     
+class StudentSpeakingAttempt(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    speaking_activity = models.ForeignKey(SpeakingActivity, on_delete=models.CASCADE)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    score = models.FloatField(null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.student} - {self.speaking_activity}"
+
+class StudentSpeakingAnswer(models.Model):
+    attempt = models.ForeignKey(
+        StudentSpeakingAttempt,
+        on_delete=models.CASCADE,
+        related_name="answers"
+    )
+    question = models.ForeignKey(
+        SpeakingActivityQuestion,
+        on_delete=models.CASCADE
+    )
+
+    audio_file = models.FileField(upload_to="student_speaking/")
+    transcript = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('attempt', 'question')
+    
     
 class ReadingActivity(models.Model):
     title=models.CharField(max_length=255)
@@ -76,6 +113,7 @@ READ_TYPE=[
 class ReadingAcitivityQuestion(models.Model):
     reading_activity=models.ForeignKey(ReadingActivity,on_delete=models.CASCADE,null=True,blank=True)
     instruction=models.CharField(max_length=255, blank=True, null=True)
+    bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
     answer_1=models.CharField(max_length=255, blank=True, null=True)
     answer_2=models.CharField(max_length=255, blank=True, null=True)
@@ -84,7 +122,38 @@ class ReadingAcitivityQuestion(models.Model):
     is_correct_answer=models.CharField(max_length=255)
     type=models.CharField(max_length=255,choices=READ_TYPE)
     
+class StudentReadingAttempt(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    reading_activity = models.ForeignKey(ReadingActivity, on_delete=models.CASCADE)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    total_questions = models.IntegerField(default=0)
+    correct_answers = models.IntegerField(default=0)
+    score = models.FloatField(null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.student} - {self.reading_activity}"
     
+class StudentReadingAnswer(models.Model):
+    attempt = models.ForeignKey(
+        StudentReadingAttempt,
+        on_delete=models.CASCADE,
+        related_name="answers"
+    )
+    question = models.ForeignKey(
+        ReadingAcitivityQuestion,
+        on_delete=models.CASCADE
+    )
+
+    selected_answer = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('attempt', 'question')
     
 class ListeningActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
@@ -97,24 +166,78 @@ class ListeningActivity(models.Model):
     def __str__(self):
         return self.title
     
-LISTENING_CHOICES=[
-    ('part1','part1'),
-    ('form_question','form_question')
-]   
+
+LISTENING_PART_CHOICES = [
+    ('Part1-Conversation', 'Part1-Conversation'),
+    ('Part2-Talk', 'Part2-Talk'),
+    ('Part3-Lecture', 'Part3-Lecture'),
+]
+
+LISTENING_QUESTION_TYPE_CHOICES=[
+    ('matching_info','Matching_info'),
+    ('mcq','Mcq'),
+    ('note_completion','Note_completion'),
+]
+class ListeningActivityPart(models.Model):
+    listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
+    part=models.CharField(max_length=255,choices=LISTENING_PART_CHOICES)
+    audio_file=models.FileField(upload_to='listening_part_file/',null=True,blank=True)
+    duration = models.CharField(max_length=255, null=True, blank=True)
+    instruction=models.CharField(max_length=255, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.listening_activity} - {self.part}"
     
 class ListeningActivityQuestion(models.Model):
-    listening_activity=models.ForeignKey(ListeningActivity,on_delete=models.CASCADE,null=True,blank=True)
-    type=models.CharField(max_length=255,choices=LISTENING_CHOICES)
+    listening_activity_part=models.ForeignKey(ListeningActivityPart,on_delete=models.CASCADE,null=True,blank=True)
+    question_type = models.CharField(max_length=255,choices=LISTENING_QUESTION_TYPE_CHOICES, blank=True, null=True)
+    bundle_id = models.UUIDField(default=uuid.uuid4, editable=False)
     question=models.CharField(max_length=255)
-    answer_1=models.CharField(max_length=255)
-    answer_2=models.CharField(max_length=255)
-    answer_3=models.CharField(max_length=255)
-    answer_4=models.CharField(max_length=255)
+    answer_1=models.CharField(max_length=255, blank=True, null=True)
+    answer_2=models.CharField(max_length=255, blank=True, null=True)
+    answer_3=models.CharField(max_length=255, blank=True, null=True)
+    answer_4=models.CharField(max_length=255, blank=True, null=True)
     is_correct_answer=models.CharField(max_length=255)
     
     
     def __str__(self):
         return self.question
+    
+class StudentListeningAttempt(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    listening_activity = models.ForeignKey(ListeningActivity, on_delete=models.CASCADE)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    total_questions = models.IntegerField(default=0)
+    correct_answers = models.IntegerField(default=0)
+    score = models.FloatField(null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.student} - {self.listening_activity}"
+
+class StudentListeningAnswer(models.Model):
+    attempt = models.ForeignKey(
+        StudentListeningAttempt,
+        on_delete=models.CASCADE,
+        related_name="answers"
+    )
+    question = models.ForeignKey(
+        ListeningActivityQuestion,
+        on_delete=models.CASCADE
+    )
+
+    selected_answer = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('attempt', 'question')
     
 class WritingActivity(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
@@ -127,7 +250,33 @@ class WritingActivity(models.Model):
     
     def __str__(self):
         return self.title
-    
+
+class StudentWritingAttempt(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    writing_activity = models.ForeignKey(WritingActivity, on_delete=models.CASCADE)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    score = models.FloatField(null=True, blank=True)
+    feedback = models.TextField(blank=True, null=True)
+
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.student} - {self.writing_activity}"
+
+class StudentWritingAnswer(models.Model):
+    attempt = models.ForeignKey(
+        StudentWritingAttempt,
+        on_delete=models.CASCADE,
+        related_name="submissions"
+    )
+
+    submission_text = models.TextField()
+    file = models.FileField(upload_to="student_writing/", blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
     
 class UserTaskProgress(models.Model):
     user_id = models.IntegerField()

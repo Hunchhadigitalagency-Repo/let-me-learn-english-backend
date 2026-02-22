@@ -12,6 +12,18 @@ from utils.paginator import CustomPageNumberPagination
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from utils.decorators import has_permission
+from rest_framework.decorators import action
+from rest_framework.response import Response
+import uuid
+from django.db import transaction
+READ_TYPE = [
+    ('true_false','True_False'),
+    ('mcq','MCQ'),
+    ('note_completion','NoteCompletion'),
+    ('sentence_completion','SentenceCompletion'),
+    ('summary_completion','SummaryCompletion')
+]
+
 class ReadingActivityQuestionViewSet(viewsets.ViewSet):
 
     # Helper to choose serializer based on action
@@ -96,7 +108,6 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Partial update (PATCH)
     @has_permission("can_update_readingactivityquestion")
     @swagger_auto_schema(
         operation_description="Partially update a reading activity question",
@@ -126,3 +137,46 @@ class ReadingActivityQuestionViewSet(viewsets.ViewSet):
         question = get_object_or_404(ReadingAcitivityQuestion, pk=pk)
         question.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @has_permission("can_write_readingactivityquestion")
+    @swagger_auto_schema(
+        method='post',
+        operation_description="Create multiple questions of a specific type",
+        request_body=ReadingActivityQuestionCreateSerializer(many=True),
+        responses={201: ReadingActivityQuestionListSerializer(many=True)}
+    )
+    @action(detail=False, methods=['post'], url_path=r'(?P<question_type>\w+)')
+    def create_by_type(self, request, question_type=None):
+        """
+        Bulk create questions by type.
+        URL example: POST /reading-activity-questions/true_false/
+        Body: array of question objects
+        """
+        # Validate question_type
+        valid_types = [q[0] for q in READ_TYPE]
+        if question_type not in valid_types:
+            return Response({"error": f"Invalid question type. Valid types: {valid_types}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        questions_data = request.data
+        if not isinstance(questions_data, list) or len(questions_data) == 0:
+            return Response({"error": "You must provide an array of question objects."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate a bundle_id for this batch
+        bundle_id = uuid.uuid4()
+        created_questions = []
+
+        with transaction.atomic():
+            for item in questions_data:
+                item['type'] = question_type  # enforce type
+                item['bundle_id'] = bundle_id  # attach bundle_id
+                serializer = ReadingActivityQuestionCreateSerializer(data=item, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                created_questions.append(serializer.data)
+
+        return Response({
+            "bundle_id": str(bundle_id),
+            "questions": created_questions
+        }, status=status.HTTP_201_CREATED)
