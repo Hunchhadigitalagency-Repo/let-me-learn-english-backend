@@ -2,8 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from tasks.models import Task, SpeakingActivity, speakingActivitySample, UserTaskProgress
+from tasks.models import Task, SpeakingActivity, speakingActivitySample, UserTaskProgress, ListeningActivity, ReadingActivity, WritingActivity
 from tasks.serializers.task_serializers import TaskSerializer
+from tasks.serializers.speaking_activity_serializers import SpeakingActivityDropdownSerializer
+from tasks.serializers.listening_activity_serializers import ListeningActivityDropdownSerializer
+from tasks.serializers.reading_activity_serializers import ReadingActivityDropdownSerializer
+from tasks.serializers.writing_activity_serializers import WritingActivityListSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.permissions import IsAuthenticated
@@ -198,4 +202,42 @@ class TaskViewSet(viewsets.ViewSet):
 
         serializer = TaskSerializer(next_task, context={'request': request})
         return Response(serializer.data)
+
+
+    # Get task activity details by type
+    @action(detail=False, methods=['get'], url_path='get-task-activity/(?P<task_id>[^/.]+)')
+    @swagger_auto_schema(
+        operation_description="Get activity data for a task by activity type (speaking, listening, reading, writing)",
+        manual_parameters=[
+            openapi.Parameter(
+                'activity_type',
+                openapi.IN_QUERY,
+                description="Type of activity: speaking, listening, reading, writing",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
+        responses={200: "Activity data", 400: "Invalid activity_type", 404: "Task not found"}
+    )
+    def get_task_activity(self, request, task_id=None):
+        ACTIVITY_MAP = {
+            'speaking': (SpeakingActivity, SpeakingActivityDropdownSerializer),
+            'listening': (ListeningActivity, ListeningActivityDropdownSerializer),
+            'reading': (ReadingActivity, ReadingActivityDropdownSerializer),
+            'writing': (WritingActivity, WritingActivityListSerializer),
+        }
+
+        activity_type = request.query_params.get('activity_type', '').lower()
+        if activity_type not in ACTIVITY_MAP:
+            return Response(
+                {"detail": f"Invalid activity_type. Choose from: {', '.join(ACTIVITY_MAP.keys())}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        task = get_object_or_404(Task, pk=task_id)
+        model, serializer_class = ACTIVITY_MAP[activity_type]
+        activities = model.objects.filter(task=task)
+        serializer = serializer_class(activities, many=True, context={'request': request})
+        return Response(serializer.data)
+    
 
