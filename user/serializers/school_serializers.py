@@ -81,6 +81,7 @@ class SchoolCreateSerializer(serializers.ModelSerializer):
             'country',
             'province',
             'district',
+            "code",
             'focal_name',
             'focal_email',
             'focal_phone',
