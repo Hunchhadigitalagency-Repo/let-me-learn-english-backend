@@ -87,36 +87,50 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
         method='post',
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['attempt_id', 'question_id', 'selected_answer'],
+            required=['attempt_id', 'answers'],
             properties={
                 'attempt_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                'selected_answer': openapi.Schema(type=openapi.TYPE_STRING)
+                'answers': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        required=['question_id', 'selected_answer'],
+                        properties={
+                            'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                            'selected_answer': openapi.Schema(type=openapi.TYPE_STRING),
+                        }
+                    )
+                )
             }
         ),
         responses={
             200: openapi.Response(
-                description='Answer saved successfully',
+                description='Answers saved successfully',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'message': openapi.Schema(type=openapi.TYPE_STRING),
-                        'is_correct': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                        'total_questions': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'current_score': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
+                        'is_completed': openapi.Schema(type=openapi.TYPE_BOOLEAN)
                     }
                 )
             ),
-            400: "attempt_id, question_id and selected_answer required",
+            400: "attempt_id and answers array required",
             404: "Attempt or Question not found"
         }
     )
+
     @action(detail=False, methods=['post'])
     def submit_answer(self, request):
         attempt_id = request.data.get("attempt_id")
-        question_id = request.data.get("question_id")
-        selected_answer = request.data.get("selected_answer")
+        answers = request.data.get("answers")
 
-        if not all([attempt_id, question_id, selected_answer]):
-            return Response({"error": "attempt_id, question_id and selected_answer required"}, status=400)
+        if not attempt_id or not isinstance(answers, list):
+            return Response(
+                {"detail": "attempt_id and answers array are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         attempt = StudentListeningAttempt.objects.filter(
             id=attempt_id,
@@ -124,26 +138,67 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
         ).first()
 
         if not attempt:
-            return Response({"error": "Attempt not found"}, status=404)
+            return Response({"detail": "Attempt not found"}, status=404)
 
-        question = ListeningActivityQuestion.objects.filter(id=question_id).first()
-        if not question:
-            return Response({"error": "Question not found"}, status=404)
+        # -----------------------------
+        # 1️⃣ Collect all question IDs
+        # -----------------------------
+        question_ids = [item.get("question_id") for item in answers if item.get("question_id")]
+        if not question_ids:
+            return Response({"detail": "No valid question_id provided"}, status=400)
 
-        is_correct = question.is_correct_answer == selected_answer
+        # -----------------------------
+        # 2️⃣ Fetch all questions in ONE query
+        # -----------------------------
+        questions = ListeningActivityQuestion.objects.filter(id__in=question_ids)
+        question_map = {q.id: q for q in questions}
 
-        StudentListeningAnswer.objects.update_or_create(
+        if len(question_map) != len(set(question_ids)):
+            return Response({"detail": "One or more questions not found"}, status=404)
+
+        # -----------------------------
+        # 3️⃣ Process answers
+        # -----------------------------
+        for item in answers:
+            question_id = item.get("question_id")
+            selected_answer = item.get("selected_answer")
+            if not question_id or not selected_answer:
+                continue
+
+            question = question_map.get(question_id)
+            is_correct = question.is_correct_answer.strip().lower() == selected_answer.strip().lower()
+
+            StudentListeningAnswer.objects.update_or_create(
+                attempt=attempt,
+                question=question,
+                defaults={
+                    "selected_answer": selected_answer,
+                    "is_correct": is_correct
+                }
+            )
+
+        # -----------------------------
+        # 4️⃣ Recalculate Score
+        # -----------------------------
+        correct_count = StudentListeningAnswer.objects.filter(
             attempt=attempt,
-            question=question,
-            defaults={
-                "selected_answer": selected_answer,
-                "is_correct": is_correct
-            }
-        )
+            is_correct=True
+        ).count()
+
+        attempt.correct_answers = correct_count
+        attempt.score = (correct_count / attempt.total_questions * 100) if attempt.total_questions > 0 else 0
+
+        # Optional: Auto-complete attempt when all answered
+        if StudentListeningAnswer.objects.filter(attempt=attempt).count() == attempt.total_questions:
+            attempt.is_completed = True
+
+        attempt.save()
 
         return Response({
-            "message": "Answer saved",
-            "is_correct": is_correct
+            "total_questions": attempt.total_questions,
+            "correct_answers": correct_count,
+            "current_score": attempt.score,
+            "is_completed": attempt.is_completed
         })
 
 
