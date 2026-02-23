@@ -100,38 +100,31 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
         method='post',
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['attempt_id', 'question_id', 'selected_answer'],
+            required=['attempt_id', 'answers'],
             properties={
                 'attempt_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                'selected_answer': openapi.Schema(type=openapi.TYPE_STRING)
+                'answers': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        required=['question_id', 'selected_answer'],
+                        properties={
+                            'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                            'selected_answer': openapi.Schema(type=openapi.TYPE_STRING),
+                        }
+                    )
+                )
             }
         ),
-        responses={
-            200: openapi.Response(
-                description='Answer submitted',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                        'is_correct': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                        'current_score': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT)
-                    }
-                )
-            ),
-            400: "attempt_id, question_id and selected_answer are required",
-            404: "Attempt or Question not found"
-        }
     )
     @action(detail=False, methods=["post"], url_path="submit-answer")
     def submit_answer(self, request):
         attempt_id = request.data.get("attempt_id")
-        question_id = request.data.get("question_id")
-        selected_answer = request.data.get("selected_answer")
+        answers = request.data.get("answers")
 
-        if not all([attempt_id, question_id, selected_answer]):
+        if not attempt_id or not isinstance(answers, list):
             return Response(
-                {"detail": "attempt_id, question_id and selected_answer are required"},
+                {"detail": "attempt_id and answers array are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -147,25 +140,66 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        question = get_object_or_404(
-            ReadingAcitivityQuestion,
-            id=question_id
+        # -----------------------------
+        # 1️⃣ Collect all question IDs
+        # -----------------------------
+        question_ids = [
+            item.get("question_id")
+            for item in answers
+            if item.get("question_id")
+        ]
+
+        if not question_ids:
+            return Response(
+                {"detail": "No valid question_id provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # -----------------------------
+        # 2️⃣ Fetch all questions in ONE query
+        # -----------------------------
+        questions = ReadingAcitivityQuestion.objects.filter(
+            id__in=question_ids
         )
 
-        is_correct = (
-            selected_answer.strip().lower() ==
-            question.is_correct_answer.strip().lower()
-        )
+        question_map = {q.id: q for q in questions}
 
-        StudentReadingAnswer.objects.update_or_create(
-            attempt=attempt,
-            question=question,
-            defaults={
-                "selected_answer": selected_answer,
-                "is_correct": is_correct
-            }
-        )
+        # Validate missing questions
+        if len(question_map) != len(set(question_ids)):
+            return Response(
+                {"detail": "One or more questions not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
+        # -----------------------------
+        # 3️⃣ Process answers
+        # -----------------------------
+        for item in answers:
+            question_id = item.get("question_id")
+            selected_answer = item.get("selected_answer")
+
+            if not question_id or not selected_answer:
+                continue
+
+            question = question_map.get(question_id)
+
+            is_correct = (
+                selected_answer.strip().lower()
+                == question.is_correct_answer.strip().lower()
+            )
+
+            StudentReadingAnswer.objects.update_or_create(
+                attempt=attempt,
+                question=question,
+                defaults={
+                    "selected_answer": selected_answer,
+                    "is_correct": is_correct
+                }
+            )
+
+        # -----------------------------
+        # 4️⃣ Recalculate Score
+        # -----------------------------
         correct_count = StudentReadingAnswer.objects.filter(
             attempt=attempt,
             is_correct=True
@@ -176,12 +210,18 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
             (correct_count / attempt.total_questions) * 100
             if attempt.total_questions > 0 else 0
         )
+
+        # Optional: Auto-complete when all answered
+        if StudentReadingAnswer.objects.filter(attempt=attempt).count() == attempt.total_questions:
+            attempt.is_completed = True
+
         attempt.save()
 
         return Response({
-            "question_id": question.id,
-            "is_correct": is_correct,
-            "current_score": attempt.score
+            "total_questions": attempt.total_questions,
+            "correct_answers": correct_count,
+            "current_score": attempt.score,
+            "is_completed": attempt.is_completed
         })
 
 
