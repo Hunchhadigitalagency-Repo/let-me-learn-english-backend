@@ -29,3 +29,20 @@ class ReadingActivityQuestionListSerializer(serializers.ModelSerializer):
                 'title': obj.reading_activity.title
             }
         return None
+
+
+class ReadingActivityQuestionStudentSerializer(serializers.ModelSerializer):
+    # Show reading activity info as {id, title}
+    reading_activity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingAcitivityQuestion
+        exclude = ['is_correct_answer']
+
+    def get_reading_activity(self, obj):
+        if obj.reading_activity:
+            return {
+                'id': obj.reading_activity.id,
+                'title': obj.reading_activity.title
+            }
+        return None

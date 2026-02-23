@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from tasks.models import ReadingActivity
 from utils.urlsfixer import build_https_url  # if needed for any URLs
-from tasks.serializers.reading_activity_question_serializers import ReadingActivityQuestionListSerializer
+from tasks.serializers.reading_activity_question_serializers import ReadingActivityQuestionListSerializer, ReadingActivityQuestionStudentSerializer
 # --------------------------
 # Serializer for Create/Update ReadingActivity
 # --------------------------
@@ -34,7 +34,7 @@ class ReadingActivityListSerializer(serializers.ModelSerializer):
     
     
 class ReadingActivityDropdownSerializer(serializers.ModelSerializer):
-    questions = ReadingActivityQuestionListSerializer(
+    questions = ReadingActivityQuestionStudentSerializer(
         source='readingacitivityquestion_set',  
         many=True,
         read_only=True
