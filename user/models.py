@@ -128,12 +128,11 @@ class School(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now_add=True)
     def save(self, *args, **kwargs):
-        if not self.code and self.name and self.establish_date:
-            base_code = f"{slugify(self.name)}-{self.establish_date.year}"
+        if not self.code and self.name:
+            base_code = f"{slugify(self.name)}"
             code = base_code
             counter = 1
 
-           
             while School.objects.filter(code=code).exists():
                 code = f"{base_code}-{counter}"
                 counter += 1
