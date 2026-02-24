@@ -60,7 +60,8 @@ class StudentViewSet(viewsets.ViewSet):
         if search_query:
             students_qs = students_qs.filter(
                 Q(name__icontains=search_query) |
-                Q(email__icontains=search_query)
+                Q(email__icontains=search_query) |
+                Q(userprofile__address__icontains=search_query) 
             )
 
         serializer = StudentSerializer(students_qs, many=True, context={'request': request})
