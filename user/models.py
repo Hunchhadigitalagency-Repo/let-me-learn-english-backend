@@ -52,6 +52,29 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email} Profile"
+    
+class Parent(models.Model):
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="children",
+        null=True,
+        blank=True
+    )
+
+
+    # For non-registered parents
+    name = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    code = models.CharField(max_length=255, unique=True, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        if self.student:
+            return f"{self.student.email} → {self.email}"
+        return f"{self.name} → {self.email}"
 
 class ResetPassword(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
