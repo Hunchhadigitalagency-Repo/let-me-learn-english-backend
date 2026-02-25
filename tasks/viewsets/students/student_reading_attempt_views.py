@@ -332,6 +332,30 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
 
         answers = attempt.answers.all()
 
+        def question_details(q):
+            qtype = getattr(q, "type", None)
+            base = {
+                "id": q.id,
+                "question": q.question,
+                "type": qtype,
+                "instruction": getattr(q, "instruction", None)
+            }
+
+            if qtype == "mcq":
+                options = [
+                    getattr(q, "answer_1", None),
+                    getattr(q, "answer_2", None),
+                    getattr(q, "answer_3", None),
+                    getattr(q, "answer_4", None),
+                ]
+                # filter out empty/None options
+                base["options"] = [o for o in options if o]
+            else:
+                # for other types just include the main question text (already present)
+                base["text"] = q.question
+
+            return base
+
         return Response({
             "attempt_id": attempt.id,
             "activity": attempt.reading_activity.title,
@@ -341,7 +365,7 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
             "is_completed": attempt.is_completed,
             "answers": [
                 {
-                    "question": answer.question.question,
+                    "question": question_details(answer.question),
                     "selected_answer": answer.selected_answer,
                     "correct_answer": answer.question.is_correct_answer,
                     "is_correct": answer.is_correct
