@@ -356,9 +356,25 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
 
             return base
 
+        # include detailed activity info for the frontend
+        activity = attempt.reading_activity
+        activity_detail = {
+            "id": getattr(activity, "id", None),
+            "title": getattr(activity, "title", None),
+            "passage": getattr(activity, "passage", None),
+            "instruction": getattr(activity, "instruction", None),
+            "duration": getattr(activity, "duration", None),
+            "file": getattr(getattr(activity, "file", None), "url", None),
+            "task": {
+                "id": getattr(getattr(activity, "task", None), "id", None),
+                "name": getattr(getattr(activity, "task", None), "name", None)
+            }
+        }
+
         return Response({
             "attempt_id": attempt.id,
             "activity": attempt.reading_activity.title,
+            "activity_detail": activity_detail,
             "total_questions": attempt.total_questions,
             "correct_answers": attempt.correct_answers,
             "score": attempt.score,
