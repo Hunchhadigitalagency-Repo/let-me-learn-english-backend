@@ -4,7 +4,8 @@ from user.models import School
 class SubscriptionHistory(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
-        ("paid", "Paid")
+        ("paid", "Paid"),
+        ("inactive", "Inactive")
     )
 
     PAYMENT_MODE_CHOICES = (
@@ -40,8 +41,8 @@ class SubscriptionHistory(models.Model):
 
     status = models.CharField(
         max_length=255,
-        blank=True,
-        null=True,
+        choices=STATUS_CHOICES,
+        default="pending",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -347,7 +347,7 @@ class SchoolGetSerializer(serializers.ModelSerializer):
 
         # No subscription → pending
         if not sub:
-            return "pending"
+            return "inactive"
 
         now = timezone.now()
 
@@ -472,7 +472,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
 
         # ✅ If no subscription → pending
         if not sub:
-            return "pending"
+            return "inactive"
 
         now = timezone.now()
 
