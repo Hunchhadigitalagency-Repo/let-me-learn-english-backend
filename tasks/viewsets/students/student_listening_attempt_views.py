@@ -247,7 +247,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
             return Response({"message": "Already completed"})
 
         total_questions = ListeningActivityQuestion.objects.filter(
-            listening_activity=attempt.listening_activity
+            listening_activity_part=attempt.listening_activity_part
         ).count()
 
         correct_answers = attempt.answers.filter(is_correct=True).count()
