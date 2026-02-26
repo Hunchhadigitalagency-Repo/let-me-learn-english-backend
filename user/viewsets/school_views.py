@@ -187,6 +187,7 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
     # ---------------- QUERYSET (FILTERS INSIDE) ----------------
     def get_queryset(self):
+        params = self.request.query_params
         status_filter = params.get("subscription_status")
         now = timezone.now()
 
