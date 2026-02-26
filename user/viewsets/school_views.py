@@ -187,6 +187,9 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
     # ---------------- QUERYSET (FILTERS INSIDE) ----------------
     def get_queryset(self):
+        status_filter = params.get("subscription_status")
+        now = timezone.now()
+
         """
         Supported query params:
           - search=...
@@ -257,29 +260,42 @@ class SchoolViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(subscriptionhistory__isnull=True)
 
         # subscription_status=<string>
-        sub_status = params.get("subscription_status")
-        if sub_status:
-            qs = qs.filter(subscriptionhistory__status__iexact=sub_status.strip())
+        if status_filter:
+            if status_filter == "new":
+                qs = qs.filter(subscriptionhistory__isnull=True)
 
-        qs = qs.distinct()
-        
-        status_filter = params.get("status")
-        today = timezone.now().date()
-        if status_filter == "expiring_soon":
-            qs = qs.filter(
-                subscriptionhistory__end_date__lte=today + timedelta(days=7),
-                subscriptionhistory__end_date__gte=today
-            )
-        elif status_filter == "on_trial":
-            qs = qs.filter(subscriptionhistory__status__iexact="trial")
+            elif status_filter == "deactivated":
+                qs = qs.filter(subscriptionhistory__status="deactivated")
 
-        elif status_filter == "new":
-            qs.filter(subscriptionhistory__isnull=True).distinct()
+            elif status_filter == "inactive":
+                qs = qs.filter(subscriptionhistory__status="inactive")
 
-        elif status_filter == "expired":
-            qs = qs.filter(subscriptionhistory__end_date__lt=today)
-        elif status_filter == "deactivated":
-            qs = qs.filter(user__is_active=False)
+            elif status_filter == "pending":
+                qs = qs.filter(subscriptionhistory__status="pending")
+
+            elif status_filter == "active":
+                qs = qs.filter(
+                    subscriptionhistory__status="paid",
+                    subscriptionhistory__end_date__gte=now
+                )
+
+            elif status_filter == "expired":
+                qs = qs.filter(
+                    subscriptionhistory__end_date__lt=now
+                )
+
+            elif status_filter == "expiring_soon":
+                qs = qs.filter(
+                    subscriptionhistory__end_date__gte=now,
+                    subscriptionhistory__end_date__lte=now + timedelta(days=7)
+                )
+
+            elif status_filter == "on_trial":
+                qs = qs.filter(
+                    subscriptionhistory__logs__on_trial=True
+                )
+
+            qs = qs.distinct()
 
         # ---- Ordering ----
         ordering = params.get("ordering", "-created_at")
@@ -298,27 +314,46 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
 
     def get_counts(self):
-        """
-        Returns counts for different school categories
-        """
-        today = timezone.now().date()
-        qs = self.get_queryset()  # use self, not super
+        now = timezone.now()
+        qs = self.get_queryset()
 
         counts = {
-            "expiring_soon": qs.filter(
-                subscriptionhistory__end_date__lte=today + timedelta(days=7),
-                subscriptionhistory__end_date__gte=today
-            ).distinct().count(),
-             
-            "on_trial": qs.filter(subscriptionhistory__status__iexact="trial").distinct().count(),
             "new": qs.filter(subscriptionhistory__isnull=True).distinct().count(),
-            "expired": qs.filter(subscriptionhistory__end_date__lt=today).distinct().count(),
-            "deactivated": qs.filter(user__is_active=False).distinct().count(),
 
-            "total": qs.count(),
+            "deactivated": qs.filter(
+                subscriptionhistory__status="deactivated"
+            ).distinct().count(),
+
+            "inactive": qs.filter(
+                subscriptionhistory__status="inactive"
+            ).distinct().count(),
+
+            "pending": qs.filter(
+                subscriptionhistory__status="pending"
+            ).distinct().count(),
+
+            "active": qs.filter(
+                subscriptionhistory__status="paid",
+                subscriptionhistory__end_date__gte=now
+            ).distinct().count(),
+
+            "expired": qs.filter(
+                subscriptionhistory__end_date__lt=now
+            ).distinct().count(),
+
+            "expiring_soon": qs.filter(
+                subscriptionhistory__end_date__gte=now,
+                subscriptionhistory__end_date__lte=now + timedelta(days=7)
+            ).distinct().count(),
+
+            "on_trial": qs.filter(
+                subscriptionhistory__logs__on_trial=True
+            ).distinct().count(),
+
+            "total": qs.distinct().count(),
         }
-        return counts
 
+        return counts
 
     # ---------------- SERIALIZER ROUTING ----------------
     def get_serializer_class(self):

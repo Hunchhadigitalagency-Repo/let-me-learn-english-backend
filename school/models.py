@@ -5,7 +5,8 @@ class SubscriptionHistory(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
         ("paid", "Paid"),
-        ("inactive", "Inactive")
+        ("inactive", "Inactive"),
+        ("deactivated", "Deactivated"),
     )
 
     PAYMENT_MODE_CHOICES = (
@@ -85,6 +86,7 @@ class SubscriptionLog(models.Model):
     new_amount = models.PositiveIntegerField(blank=True, null=True)
     old_payment_mode = models.CharField(max_length=50, blank=True, null=True)
     new_payment_mode = models.CharField(max_length=50, blank=True, null=True)
+    on_trial = models.BooleanField(default=False)
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

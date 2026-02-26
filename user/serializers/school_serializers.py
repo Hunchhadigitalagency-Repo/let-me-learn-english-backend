@@ -6,6 +6,7 @@ from user.models import User,UserProfile,School
 from utils.urlsfixer import build_https_url
 
 from django.utils import timezone
+from datetime import timedelta
 
 class SchoolRegistrationSerializer(serializers.ModelSerializer):
     
@@ -341,26 +342,45 @@ class SchoolGetSerializer(serializers.ModelSerializer):
             SubscriptionHistory.objects
             .filter(school=obj)
             .order_by("-start_date")
-            .only("end_date", "status")
+            .prefetch_related("logs")
             .first()
         )
 
-        # No subscription → pending
         if not sub:
-            return "inactive"
+            return "new"
 
         now = timezone.now()
 
-        # Not paid → pending
-        if sub.status != "paid":
-            return "pending"
+        # Deactivated
+        if sub.status == "deactivated":
+            return "deactivated"
 
-        # Paid but expired
+        # Inactive
+        if sub.status == "inactive":
+            return "inactive"
+
+        # Trial (check latest log)
+        latest_log = sub.logs.order_by("-created_at").first()
+        if latest_log and latest_log.on_trial:
+            return "on_trial"
+
+        # Expired
         if sub.end_date and sub.end_date < now:
             return "expired"
 
-        # Paid and active
-        return "active"
+        # Expiring Soon (7 days)
+        if sub.end_date and now <= sub.end_date <= now + timedelta(days=7):
+            return "expiring_soon"
+
+        # Pending
+        if sub.status == "pending":
+            return "pending"
+
+        # Active
+        if sub.status == "paid":
+            return "active"
+
+        return "inactive"
 
 
     # ---------- focal person ----------
@@ -468,24 +488,49 @@ class SchoolListSerializer(serializers.ModelSerializer):
         return sub.end_date if sub else None
 
     def get_subscription_status(self, obj):
-        sub = self._get_latest_subscription(obj)
+        sub = (
+            SubscriptionHistory.objects
+            .filter(school=obj)
+            .order_by("-start_date")
+            .prefetch_related("logs")
+            .first()
+        )
 
-        # ✅ If no subscription → pending
         if not sub:
-            return "inactive"
+            return "new"
 
         now = timezone.now()
 
-        # ✅ If not paid yet → pending
-        if sub.status != "paid":
-            return "pending"
+        # Deactivated
+        if sub.status == "deactivated":
+            return "deactivated"
 
-        # ✅ If paid but expired
+        # Inactive
+        if sub.status == "inactive":
+            return "inactive"
+
+        # Trial (check latest log)
+        latest_log = sub.logs.order_by("-created_at").first()
+        if latest_log and latest_log.on_trial:
+            return "on_trial"
+
+        # Expired
         if sub.end_date and sub.end_date < now:
             return "expired"
 
-        # ✅ Paid and active
-        return "active"
+        # Expiring Soon (7 days)
+        if sub.end_date and now <= sub.end_date <= now + timedelta(days=7):
+            return "expiring_soon"
+
+        # Pending
+        if sub.status == "pending":
+            return "pending"
+
+        # Active
+        if sub.status == "paid":
+            return "active"
+
+        return "inactive"
 
 
 
