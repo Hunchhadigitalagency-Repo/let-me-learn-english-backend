@@ -260,7 +260,6 @@ class SchoolViewSet(viewsets.ModelViewSet):
             elif val in ("false", "0", "no"):
                 qs = qs.filter(subscriptionhistory__isnull=True)
 
-        # subscription_status=<string>
         if status_filter:
             if status_filter == "new":
                 qs = qs.filter(subscriptionhistory__isnull=True)
@@ -274,10 +273,14 @@ class SchoolViewSet(viewsets.ModelViewSet):
             elif status_filter == "pending":
                 qs = qs.filter(subscriptionhistory__status="pending")
 
+            elif status_filter == "paid":
+                # filter for paid subscriptions
+                qs = qs.filter(subscriptionhistory__status="paid")
+
             elif status_filter == "active":
+                # active = paid and not expired
                 qs = qs.filter(
                     subscriptionhistory__status="paid",
-                    subscriptionhistory__end_date__gte=now
                 )
 
             elif status_filter == "expired":
@@ -331,6 +334,10 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
             "pending": qs.filter(
                 subscriptionhistory__status="pending"
+            ).distinct().count(),
+
+            "paid": qs.filter(
+                subscriptionhistory__status="paid"
             ).distinct().count(),
 
             "active": qs.filter(
