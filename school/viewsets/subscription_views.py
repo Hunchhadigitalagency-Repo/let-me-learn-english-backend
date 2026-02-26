@@ -10,7 +10,7 @@ from school.serializers.subscriptions_serializers import (
     SubscriptionHistoryListSerializer
 )
 from utils.paginator import CustomPageNumberPagination
-
+from rest_framework.decorators import action
 
 class SubscriptionHistoryViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -147,3 +147,40 @@ class SubscriptionHistoryViewSet(viewsets.ViewSet):
 
         subscription.delete()
         return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
+
+    # ------------------ GET BY SCHOOL ------------------
+    @swagger_auto_schema(
+        operation_description="Get subscription details for a specific school using school_id query param",
+        manual_parameters=[
+            openapi.Parameter(
+                "school_id",
+                openapi.IN_QUERY,
+                description="ID of the school",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={200: SubscriptionHistoryListSerializer(many=True), 404: "School not found"}
+    )
+    @action(detail=False, methods=["get"], url_path="by-school")
+    def by_school(self, request):
+        school_id = request.query_params.get("school_id")
+        if not school_id:
+            return Response({"detail": "school_id query parameter is required"}, status=400)
+
+        # Make sure the school belongs to the requesting user
+        try:
+            school = School.objects.get(id=school_id, user=request.user)
+        except School.DoesNotExist:
+            return Response({"detail": "School not found"}, status=404)
+
+        subscriptions = SubscriptionHistory.objects.filter(
+            school=school
+        ).select_related("school").order_by("-id")
+
+        paginator = CustomPageNumberPagination()
+        paginated_subscriptions = paginator.paginate_queryset(subscriptions, request)
+        serializer = SubscriptionHistoryListSerializer(paginated_subscriptions, context={"request": request}, many=True)    
+
+        return paginator.get_paginated_response(serializer.data)
