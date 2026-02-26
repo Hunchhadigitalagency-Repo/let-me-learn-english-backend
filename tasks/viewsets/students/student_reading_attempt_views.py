@@ -364,7 +364,7 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
             "passage": getattr(activity, "passage", None),
             "instruction": getattr(activity, "instruction", None),
             "duration": getattr(activity, "duration", None),
-            "file": getattr(getattr(activity, "file", None), "url", None),
+            "file": request.build_absolute_uri(getattr(getattr(activity, "file", None), "url", None)),
             "task": {
                 "id": getattr(getattr(activity, "task", None), "id", None),
                 "name": getattr(getattr(activity, "task", None), "name", None)
