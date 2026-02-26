@@ -4,6 +4,9 @@ from rest_framework import serializers
 from django.db import transaction
 from user.models import User,UserProfile,School
 from utils.urlsfixer import build_https_url
+
+from django.utils import timezone
+
 class SchoolRegistrationSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField()
@@ -285,6 +288,8 @@ class SchoolGetSerializer(serializers.ModelSerializer):
     student_count = serializers.SerializerMethodField()
     parent_count = serializers.SerializerMethodField()
     relation_count = serializers.SerializerMethodField()
+    subscription_status = serializers.SerializerMethodField()
+
 
     class Meta:
         model = School
@@ -309,6 +314,8 @@ class SchoolGetSerializer(serializers.ModelSerializer):
             "student_count",
             "parent_count",
             "relation_count",
+            "subscription_status",
+
 
             "subscriptions",
         )
@@ -328,6 +335,33 @@ class SchoolGetSerializer(serializers.ModelSerializer):
 
     def get_district(self, obj):
         return obj.district.name if obj.district else None
+
+    def get_subscription_status(self, obj):
+        sub = (
+            SubscriptionHistory.objects
+            .filter(school=obj)
+            .order_by("-start_date")
+            .only("end_date", "status")
+            .first()
+        )
+
+        # No subscription → pending
+        if not sub:
+            return "pending"
+
+        now = timezone.now()
+
+        # Not paid → pending
+        if sub.status != "paid":
+            return "pending"
+
+        # Paid but expired
+        if sub.end_date and sub.end_date < now:
+            return "expired"
+
+        # Paid and active
+        return "active"
+
 
     # ---------- focal person ----------
     def get_focal_person(self, obj):
@@ -435,7 +469,23 @@ class SchoolListSerializer(serializers.ModelSerializer):
 
     def get_subscription_status(self, obj):
         sub = self._get_latest_subscription(obj)
-        return sub.status if sub else None
+
+        # ✅ If no subscription → pending
+        if not sub:
+            return "pending"
+
+        now = timezone.now()
+
+        # ✅ If not paid yet → pending
+        if sub.status != "paid":
+            return "pending"
+
+        # ✅ If paid but expired
+        if sub.end_date and sub.end_date < now:
+            return "expired"
+
+        # ✅ Paid and active
+        return "active"
 
 
 

@@ -325,12 +325,17 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
         attempt = StudentReadingAttempt.objects.filter(
             id=pk,
             student=request.user
-        ).first()
+        ).select_related("reading_activity").prefetch_related("answers__question").first()
 
         if not attempt:
             return Response({"error": "Attempt not found"}, status=404)
 
         answers = attempt.answers.all()
+
+        duration = None
+        if attempt.completed_at:
+            duration_delta = attempt.completed_at - attempt.started_at
+            duration = int(duration_delta.total_seconds())
 
         return Response({
             "attempt_id": attempt.id,
@@ -339,6 +344,7 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
             "correct_answers": attempt.correct_answers,
             "score": attempt.score,
             "is_completed": attempt.is_completed,
+            "duration_seconds": duration,
             "answers": [
                 {
                     "question": answer.question.question,
