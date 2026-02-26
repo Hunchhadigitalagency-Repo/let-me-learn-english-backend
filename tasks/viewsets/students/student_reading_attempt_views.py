@@ -336,10 +336,49 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
         if attempt.completed_at:
             duration_delta = attempt.completed_at - attempt.started_at
             duration = int(duration_delta.total_seconds())
+        def question_details(q):
+            qtype = getattr(q, "type", None)
+            base = {
+                "id": q.id,
+                "question": q.question,
+                "type": qtype,
+                "instruction": getattr(q, "instruction", None)
+            }
+
+            if qtype == "mcq":
+                options = [
+                    getattr(q, "answer_1", None),
+                    getattr(q, "answer_2", None),
+                    getattr(q, "answer_3", None),
+                    getattr(q, "answer_4", None),
+                ]
+                # filter out empty/None options
+                base["options"] = [o for o in options if o]
+            else:
+                # for other types just include the main question text (already present)
+                base["text"] = q.question
+
+            return base
+
+        # include detailed activity info for the frontend
+        activity = attempt.reading_activity
+        activity_detail = {
+            "id": getattr(activity, "id", None),
+            "title": getattr(activity, "title", None),
+            "passage": getattr(activity, "passage", None),
+            "instruction": getattr(activity, "instruction", None),
+            "duration": getattr(activity, "duration", None),
+            "file": request.build_absolute_uri(getattr(getattr(activity, "file", None), "url", None)),
+            "task": {
+                "id": getattr(getattr(activity, "task", None), "id", None),
+                "name": getattr(getattr(activity, "task", None), "name", None)
+            }
+        }
 
         return Response({
             "attempt_id": attempt.id,
             "activity": attempt.reading_activity.title,
+            "activity_detail": activity_detail,
             "total_questions": attempt.total_questions,
             "correct_answers": attempt.correct_answers,
             "score": attempt.score,
@@ -347,7 +386,7 @@ class StudentReadingAttemptViewSet(viewsets.ViewSet):
             "duration_seconds": duration,
             "answers": [
                 {
-                    "question": answer.question.question,
+                    "question": question_details(answer.question),
                     "selected_answer": answer.selected_answer,
                     "correct_answer": answer.question.is_correct_answer,
                     "is_correct": answer.is_correct
