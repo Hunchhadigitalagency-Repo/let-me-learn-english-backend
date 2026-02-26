@@ -12,7 +12,8 @@ from tasks.models import (
     ListeningActivity,
     ListeningActivityQuestion,
     StudentListeningAttempt,
-    StudentListeningAnswer
+    StudentListeningAnswer,
+    StudentSpeakingAttempt
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
@@ -277,6 +278,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
     # 4️⃣ Get Attempt Result
     # -----------------------------
     @swagger_auto_schema(
+        method='get',
         responses={
             200: openapi.Response(
                 description='Attempt result',
@@ -286,16 +288,15 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                         'attempt_id': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'activity': openapi.Schema(type=openapi.TYPE_STRING),
                         'total_questions': openapi.Schema(type=openapi.TYPE_INTEGER),
-                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'score': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
                         'is_completed': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                        'duration_seconds': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'answers': openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
                                 'question': openapi.Schema(type=openapi.TYPE_STRING),
-                                'selected_answer': openapi.Schema(type=openapi.TYPE_STRING),
-                                'correct_answer': openapi.Schema(type=openapi.TYPE_STRING),
-                                'is_correct': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                                'audio_file': openapi.Schema(type=openapi.TYPE_STRING),
+                                'transcript': openapi.Schema(type=openapi.TYPE_STRING),
                             })
                         )
                     }
@@ -306,29 +307,60 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
     )
     @action(detail=True, methods=['get'])
     def result(self, request, pk=None):
-        attempt = StudentListeningAttempt.objects.filter(
+        # fetch the attempt
+        attempt = StudentSpeakingAttempt.objects.filter(
             id=pk,
             student=request.user
-        ).first()
+        ).select_related("speaking_activity").prefetch_related("answers__question").first()
 
         if not attempt:
             return Response({"error": "Attempt not found"}, status=404)
 
         answers = attempt.answers.all()
 
+        # calculate duration
+        duration = None
+        if attempt.completed_at:
+            duration_delta = attempt.completed_at - attempt.started_at
+            duration = int(duration_delta.total_seconds())
+
+        # format questions
+        def question_details(q):
+            qtype = getattr(q, "type", None)
+            base = {
+                "id": q.id,
+                "type": qtype,
+                "instruction": getattr(q, "instruction", None),
+            }
+            if qtype in ["part1", "extended_question"]:
+                if getattr(q, "attachment", None):
+                    base["attachment"] = request.build_absolute_uri(q.attachment.url)
+                base["text_question"] = getattr(q, "text_question", None)
+            return base
+
+        # include detailed activity info
+        activity = attempt.speaking_activity
+        activity_detail = {
+            "id": getattr(activity, "id", None),
+            "title": getattr(activity, "title", None),
+            "duration": getattr(activity, "duration", None),
+            "instruction": getattr(activity, "instruction", None),
+            "use_default_instruction": getattr(activity, "use_default_instruction", None)
+        }
+
         return Response({
             "attempt_id": attempt.id,
-            "activity": attempt.listening_activity.title,
-            "total_questions": attempt.total_questions,
-            "correct_answers": attempt.correct_answers,
+            "activity": activity.title,
+            "activity_detail": activity_detail,
+            "total_questions": answers.count(),
             "score": attempt.score,
             "is_completed": attempt.is_completed,
+            "duration_seconds": duration,
             "answers": [
                 {
-                    "question": answer.question.question,
-                    "selected_answer": answer.selected_answer,
-                    "correct_answer": answer.question.is_correct_answer,
-                    "is_correct": answer.is_correct
+                    "question": question_details(answer.question),
+                    "audio_file": request.build_absolute_uri(answer.audio_file.url),
+                    "transcript": answer.transcript
                 }
                 for answer in answers
             ]
