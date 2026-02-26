@@ -171,7 +171,7 @@ class SubscriptionHistoryViewSet(viewsets.ViewSet):
 
         # Make sure the school belongs to the requesting user
         try:
-            school = School.objects.get(id=school_id, user=request.user)
+            school = School.objects.get(id=school_id)
         except School.DoesNotExist:
             return Response({"detail": "School not found"}, status=404)
 
