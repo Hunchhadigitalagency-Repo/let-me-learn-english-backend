@@ -1,77 +1,111 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from user.models import School
-# Create your models here.
-class SubscriptionHistory(models.Model):
+
+User = get_user_model()
+
+
+class Subscription(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
         ("paid", "Paid"),
         ("inactive", "Inactive"),
         ("deactivated", "Deactivated"),
     )
-
     PAYMENT_MODE_CHOICES = (
         ("cash", "Cash"),
         ("online", "Online"),
         ("bank", "Bank Transfer"),
     )
+    SUBSCRIPTION_TYPE_CHOICES = (
+        ("monthly", "Monthly"),
+        ("quarterly", "Quarterly"),
+        ("yearly", "Yearly"),
+        ("custom", "Custom"),
+    )
 
-    school = models.ForeignKey(
+    school = models.OneToOneField(
         School,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True
+        related_name="subscription"
     )
-
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
     package = models.CharField(max_length=255)
-
-    remarks = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
+    subscription_type = models.CharField(
+        max_length=50,
+        choices=SUBSCRIPTION_TYPE_CHOICES,
+        default="monthly"
     )
-
+    amount = models.PositiveIntegerField()
     payment_mode = models.CharField(
         max_length=50,
         choices=PAYMENT_MODE_CHOICES
     )
-
-    amount = models.PositiveIntegerField()
-
     status = models.CharField(
-        max_length=255,
+        max_length=50,
         choices=STATUS_CHOICES,
-        default="pending",
+        default="pending"
     )
-
+    on_trial = models.BooleanField(default=False)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.school} - {self.package} ({self.status})"
+        return f"{self.school} - {self.package} ({self.subscription_type} / {self.status})"
 
+    def snapshot(self):
+        """Captures the current state of all tracked fields."""
+        return {
+            "package": self.package,
+            "subscription_type": self.subscription_type,
+            "amount": self.amount,
+            "payment_mode": self.payment_mode,
+            "status": self.status,
+            "on_trial": self.on_trial,
+            "start_date": str(self.start_date),
+            "end_date": str(self.end_date),
+            "remarks": self.remarks,
+        }
 
+    def update_subscription(self, changed_by=None, remarks=None, **kwargs):
+        """
+        Single entry point for all updates.
+        Always logs before/after — never call .save() directly.
+        """
+        before = self.snapshot()
 
-from django.db import models
-from school.models import SubscriptionHistory
-from user.models import School
-from django.contrib.auth import get_user_model
+        for field, value in kwargs.items():
+            setattr(self, field, value)
 
-User = get_user_model()
+        if remarks:
+            self.remarks = remarks
+
+        self.save()
+
+        after = self.snapshot()
+
+        # Only store fields that actually changed
+        changed_fields = {
+            key: {"old": before[key], "new": after[key]}
+            for key in before
+            if before[key] != after[key]
+        }
+
+        SubscriptionLog.objects.create(
+            subscription=self,
+            changed_by=changed_by,
+            changed_fields=changed_fields,
+            remarks=remarks,
+        )
+
 
 class SubscriptionLog(models.Model):
     subscription = models.ForeignKey(
-        SubscriptionHistory, 
-        on_delete=models.CASCADE, 
+        Subscription,
+        on_delete=models.CASCADE,
         related_name="logs"
-    )
-    school = models.ForeignKey(
-        School, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True
     )
     changed_by = models.ForeignKey(
         User,
@@ -80,15 +114,15 @@ class SubscriptionLog(models.Model):
         blank=True,
         help_text="The user who made the change"
     )
-    old_status = models.CharField(max_length=255, blank=True, null=True)
-    new_status = models.CharField(max_length=255, blank=True, null=True)
-    old_amount = models.PositiveIntegerField(blank=True, null=True)
-    new_amount = models.PositiveIntegerField(blank=True, null=True)
-    old_payment_mode = models.CharField(max_length=50, blank=True, null=True)
-    new_payment_mode = models.CharField(max_length=50, blank=True, null=True)
-    on_trial = models.BooleanField(default=False)
+    changed_fields = models.JSONField(
+        default=dict,
+        help_text="Stores only changed fields with old and new values"
+    )
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+
     def __str__(self):
-        return f"Log for {self.subscription} at {self.created_at}"
+        return f"Log #{self.pk} for {self.subscription} at {self.created_at}"

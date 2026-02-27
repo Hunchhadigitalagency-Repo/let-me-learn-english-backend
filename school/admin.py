@@ -1,47 +1,56 @@
 from django.contrib import admin
+from .models import Subscription, SubscriptionLog
 
-# Register your models here.
-from django.contrib import admin
-from .models import SubscriptionHistory, SubscriptionLog
 
-# ------------------ SubscriptionHistory Admin ------------------
-@admin.register(SubscriptionHistory)
-class SubscriptionHistoryAdmin(admin.ModelAdmin):
+# ------------------ Subscription Admin ------------------
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "school",
         "package",
+        "subscription_type",
         "status",
         "payment_mode",
         "amount",
+        "on_trial",
         "start_date",
         "end_date",
         "created_at",
-        "updated_at"
+        "updated_at",
     )
-    list_filter = ("status", "payment_mode", "school")
-    search_fields = ("school__user__username", "package", "status")
+    list_filter = ("status", "payment_mode", "subscription_type", "on_trial")
+    search_fields = ("school__name", "school__user__username", "package")
     ordering = ("-created_at",)
     readonly_fields = ("created_at", "updated_at")
 
+
 # ------------------ SubscriptionLog Admin ------------------
+
 @admin.register(SubscriptionLog)
 class SubscriptionLogAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "subscription",
-        "school",
         "changed_by",
-        "old_status",
-        "new_status",
-        "old_amount",
-        "new_amount",
-        "old_payment_mode",
-        "new_payment_mode",
-        "created_at"
+        "get_changed_keys",
+        "remarks",
+        "created_at",
     )
-    list_filter = ("school", "changed_by", "new_status", "new_payment_mode")
-    search_fields = ("subscription__package", "school__user__username", "changed_by__username")
+    list_filter = ("changed_by",)
+    search_fields = (
+        "subscription__school__name",
+        "subscription__school__user__username",
+        "changed_by__username",
+        "remarks",
+    )
     ordering = ("-created_at",)
-    readonly_fields = ("created_at",)
+    readonly_fields = ("subscription", "changed_by", "changed_fields", "remarks", "created_at")
 
+    @admin.display(description="Changed Fields")
+    def get_changed_keys(self, obj):
+        """Shows which fields were changed, e.g. 'status, amount'"""
+        if obj.changed_fields:
+            return ", ".join(obj.changed_fields.keys())
+        return "—"
