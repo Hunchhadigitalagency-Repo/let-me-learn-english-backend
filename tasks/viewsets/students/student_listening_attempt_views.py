@@ -331,7 +331,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
             "duration": activity.duration,
             "instruction": activity.instruction,
             "audio_file": request.build_absolute_uri(activity.audio_file.url)
-            if activity.audio_file else None
+            if activity.audio_file else request.build_absolute_uri("/media/default_audio.mp3")
         }
 
         answer_list = []
