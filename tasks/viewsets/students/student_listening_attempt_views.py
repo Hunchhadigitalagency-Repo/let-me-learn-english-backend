@@ -311,7 +311,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
         attempt = StudentListeningAttempt.objects.filter(
             id=pk,
             student=request.user
-        ).select_related("speaking_activity").prefetch_related("answers__question").first()
+        ).select_related("listening_activity").prefetch_related("answers__question").first()
 
         if not attempt:
             return Response({"error": "Attempt not found"}, status=404)
