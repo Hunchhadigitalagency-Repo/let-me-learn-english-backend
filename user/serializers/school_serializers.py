@@ -247,7 +247,7 @@ class SchoolGetSerializer(serializers.ModelSerializer):
     province = serializers.SerializerMethodField()
     district = serializers.SerializerMethodField()
     focal_person = serializers.SerializerMethodField()
-    subscription = serializers.SerializerMethodField()      # single object, not a list
+    # subscription = serializers.SerializerMethodField()      # single object, not a list
     subscription_status = serializers.SerializerMethodField()
     student_count = serializers.SerializerMethodField()
     parent_count = serializers.SerializerMethodField()
@@ -262,7 +262,7 @@ class SchoolGetSerializer(serializers.ModelSerializer):
             "focal_person",
             "student_count", "parent_count", "relation_count",
             "subscription_status",
-            "subscription",          # replaces "subscriptions" list
+            # "subscription",          
         )
 
     def _get_subscription(self, obj):
@@ -300,12 +300,12 @@ class SchoolGetSerializer(serializers.ModelSerializer):
             return None
         return FocalPersonGetSerializer(focal, context=self.context).data
 
-    def get_subscription(self, obj):
-        from school.serializers.subscriptions_serializers import SubscriptionHistoryListSerializer
-        sub = self._get_subscription(obj)
-        if not sub:
-            return None
-        return SubscriptionHistoryListSerializer(sub, context=self.context).data
+    # def get_subscription(self, obj):
+    #     from school.serializers.subscriptions_serializers import SubscriptionHistoryListSerializer
+    #     sub = self._get_subscription(obj)
+    #     if not sub:
+    #         return None
+    #     return SubscriptionHistoryListSerializer(sub, context=self.context).data
 
     def get_student_count(self, obj):
         return SchoolStudentParent.objects.filter(school=obj).values("student").distinct().count()

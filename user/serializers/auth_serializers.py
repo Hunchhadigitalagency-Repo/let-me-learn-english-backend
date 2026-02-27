@@ -120,7 +120,7 @@ class UserProfileGetSerializer(serializers.ModelSerializer):
             try:
                 # assuming a OneToOneField from School to User
                 school = obj.user.school
-                return SchoolBasicSerializer(school).data
+                return SchoolBasicSerializer(school, context=self.context).data
             except School.DoesNotExist:
                 return None
         return None
