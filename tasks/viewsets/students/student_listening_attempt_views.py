@@ -308,9 +308,9 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['get'])
     def result(self, request, pk=None):
         # fetch the attempt
-        attempt = StudentSpeakingAttempt.objects.filter(
+        attempt = StudentListeningAttempt.objects.filter(
             id=pk,
-            # student=request.user
+            student=request.user
         ).select_related("speaking_activity").prefetch_related("answers__question").first()
 
         if not attempt:
