@@ -326,6 +326,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
     focal_person = serializers.SerializerMethodField()
     subscription_expiry_date = serializers.SerializerMethodField()
     subscription_status = serializers.SerializerMethodField()
+    subscription_id = serializers.SerializerMethodField()
 
     class Meta:
         model = School
@@ -333,6 +334,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
             "id", "name", "email", "city", "address", "code",
             "logo_url", "focal_person",
             "subscription_expiry_date", "subscription_status",
+            "subscription_id",
         )
 
     def _get_subscription(self, obj):
@@ -358,6 +360,10 @@ class SchoolListSerializer(serializers.ModelSerializer):
     def get_subscription_expiry_date(self, obj):
         sub = self._get_subscription(obj)
         return sub.end_date if sub else None
+    
+    def get_subscription_id(self, obj):
+        sub = self._get_subscription(obj)
+        return sub.id if sub else None
 
     def get_subscription_status(self, obj):
         return resolve_subscription_status(self._get_subscription(obj))
