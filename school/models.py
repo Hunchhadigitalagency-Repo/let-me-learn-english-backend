@@ -8,9 +8,8 @@ User = get_user_model()
 class Subscription(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
-        ("paid", "Paid"),
-        ("inactive", "Inactive"),
-        ("deactivated", "Deactivated"),
+        ("active", "Active"),
+        ("deactivate", "Deactivate"),
     )
     PAYMENT_MODE_CHOICES = (
         ("cash", "Cash"),
@@ -43,7 +42,7 @@ class Subscription(models.Model):
     status = models.CharField(
         max_length=50,
         choices=STATUS_CHOICES,
-        default="pending"
+        default="inactive"
     )
     on_trial = models.BooleanField(default=False)
     start_date = models.DateField()
