@@ -365,7 +365,8 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                 "part_audio": part_audio,
                 "options": options,
                 "correct_answer": correct_answer,
-                "created_at": q.created_at.isoformat() if hasattr(q, "created_at") else None,
+                "created_at": answer.created_at if answer.created_at else None,  # ✅ use answer's created_at
+
             })
 
         return Response({
