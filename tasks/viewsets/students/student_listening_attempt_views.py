@@ -287,23 +287,15 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                     properties={
                         'attempt_id': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'activity': openapi.Schema(type=openapi.TYPE_STRING),
+                        'activity_detail': openapi.Schema(type=openapi.TYPE_OBJECT),
                         'total_questions': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'correct_answers': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'score': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
                         'is_completed': openapi.Schema(type=openapi.TYPE_BOOLEAN),
                         'duration_seconds': openapi.Schema(type=openapi.TYPE_INTEGER),
                         'answers': openapi.Schema(
                             type=openapi.TYPE_ARRAY,
-                            items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
-                                'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                'question': openapi.Schema(type=openapi.TYPE_STRING),
-                                'question_type': openapi.Schema(type=openapi.TYPE_STRING),
-                                'selected_answer': openapi.Schema(type=openapi.TYPE_STRING),
-                                'is_correct': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                                'part': openapi.Schema(type=openapi.TYPE_STRING, nullable=True),
-                                'part_audio': openapi.Schema(type=openapi.TYPE_STRING, nullable=True),
-                                'options': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
-                                'correct_answer': openapi.Schema(type=openapi.TYPE_STRING, nullable=True)
-                            })
+                            items=openapi.Items(type=openapi.TYPE_OBJECT)
                         )
                     }
                 )
@@ -352,19 +344,19 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                 if q.listening_activity_part.audio_file:
                     part_audio = request.build_absolute_uri(q.listening_activity_part.audio_file.url)
 
-            options = None
-            correct_answer = None
-            if q.question_type == "mcq":
-                options = {
-                    "answer_1": q.answer_1,
-                    "answer_2": q.answer_2,
-                    "answer_3": q.answer_3,
-                    "answer_4": q.answer_4,
-                }
-                correct_answer = q.is_correct_answer
+            # Include all options and correct answer for all question types
+            options = {
+                "answer_1": q.answer_1,
+                "answer_2": q.answer_2,
+                "answer_3": q.answer_3,
+                "answer_4": q.answer_4,
+            }
+
+            correct_answer = q.is_correct_answer
 
             answer_list.append({
                 "question_id": q.id,
+                "bundle_id": str(q.bundle_id),
                 "question": q.question,
                 "question_type": q.question_type,
                 "selected_answer": answer.selected_answer,
@@ -373,6 +365,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                 "part_audio": part_audio,
                 "options": options,
                 "correct_answer": correct_answer,
+                "created_at": q.created_at.isoformat() if hasattr(q, "created_at") else None,
             })
 
         return Response({
