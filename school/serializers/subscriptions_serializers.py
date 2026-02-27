@@ -31,14 +31,12 @@ class SubscriptionHistoryCreateSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionHistoryListSerializer(serializers.ModelSerializer):
-    school = SchoolBasicSerializer(read_only=True)
     logs = SubscriptionLogSerializer(many=True, read_only=True)
 
     class Meta:
         model = Subscription
         fields = (
             "id",
-            "school",
             "package",
             "subscription_type",
             "amount",
