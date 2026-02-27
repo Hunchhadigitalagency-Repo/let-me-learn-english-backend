@@ -294,9 +294,15 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
                         'answers': openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
+                                'question_id': openapi.Schema(type=openapi.TYPE_INTEGER),
                                 'question': openapi.Schema(type=openapi.TYPE_STRING),
-                                'audio_file': openapi.Schema(type=openapi.TYPE_STRING),
-                                'transcript': openapi.Schema(type=openapi.TYPE_STRING),
+                                'question_type': openapi.Schema(type=openapi.TYPE_STRING),
+                                'selected_answer': openapi.Schema(type=openapi.TYPE_STRING),
+                                'is_correct': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                'part': openapi.Schema(type=openapi.TYPE_STRING, nullable=True),
+                                'part_audio': openapi.Schema(type=openapi.TYPE_STRING, nullable=True),
+                                'options': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
+                                'correct_answer': openapi.Schema(type=openapi.TYPE_STRING, nullable=True)
                             })
                         )
                     }
@@ -307,15 +313,13 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
     )
     @action(detail=True, methods=['get'])
     def result(self, request, pk=None):
-
+        # Fetch attempt
         attempt = StudentListeningAttempt.objects.filter(
             id=pk,
             student=request.user
-        ).select_related(
-            "listening_activity"
-        ).prefetch_related(
-            "answers__question__listening_activity_part"
-        ).first()
+        ).select_related("listening_activity") \
+        .prefetch_related("answers__question__listening_activity_part") \
+        .first()
 
         if not attempt:
             return Response({"error": "Attempt not found"}, status=404)
@@ -325,9 +329,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
         # Calculate duration
         duration = None
         if attempt.completed_at:
-            duration = int(
-                (attempt.completed_at - attempt.started_at).total_seconds()
-            )
+            duration = int((attempt.completed_at - attempt.started_at).total_seconds())
 
         activity = attempt.listening_activity
 
@@ -340,6 +342,39 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
             if activity.audio_file else None
         }
 
+        answer_list = []
+        for answer in answers:
+            q = answer.question
+            part = None
+            part_audio = None
+            if q.listening_activity_part:
+                part = q.listening_activity_part.part
+                if q.listening_activity_part.audio_file:
+                    part_audio = request.build_absolute_uri(q.listening_activity_part.audio_file.url)
+
+            options = None
+            correct_answer = None
+            if q.question_type == "mcq":
+                options = {
+                    "answer_1": q.answer_1,
+                    "answer_2": q.answer_2,
+                    "answer_3": q.answer_3,
+                    "answer_4": q.answer_4,
+                }
+                correct_answer = q.is_correct_answer
+
+            answer_list.append({
+                "question_id": q.id,
+                "question": q.question,
+                "question_type": q.question_type,
+                "selected_answer": answer.selected_answer,
+                "is_correct": answer.is_correct,
+                "part": part,
+                "part_audio": part_audio,
+                "options": options,
+                "correct_answer": correct_answer,
+            })
+
         return Response({
             "attempt_id": attempt.id,
             "activity": activity.title,
@@ -349,18 +384,5 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
             "score": attempt.score,
             "is_completed": attempt.is_completed,
             "duration_seconds": duration,
-            "answers": [
-                {
-                    "question_id": answer.question.id,
-                    "question": answer.question.question,
-                    "question_type": answer.question.question_type,
-                    "selected_answer": answer.selected_answer,
-                    "is_correct": answer.is_correct,
-                    "part": answer.question.listening_activity_part.part,
-                    "part_audio": request.build_absolute_uri(
-                        answer.question.listening_activity_part.audio_file.url
-                    ) if answer.question.listening_activity_part.audio_file else None,
-                }
-                for answer in answers
-            ]
+            "answers": answer_list
         })
