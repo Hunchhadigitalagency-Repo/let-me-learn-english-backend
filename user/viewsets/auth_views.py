@@ -26,7 +26,7 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from user.serializers.auth_serializers import AdminRegisterSerializer, UserSerializer,UserProfileUpdateSerializer,UserProfileSerializer,ChangePasswordSerializer,RegisterSerializer
+from user.serializers.auth_serializers import AdminRegisterSerializer, UserProfileGetSerializer, UserSerializer,UserProfileUpdateSerializer,UserProfileSerializer,ChangePasswordSerializer,RegisterSerializer
 from rest_framework import generics,permissions,viewsets
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework import status, views, permissions
@@ -559,41 +559,55 @@ class ResetPasswordView(APIView):
             return Response({"error": "Invalid reset token"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
-    serializer_class=UserProfileUpdateSerializer
-    permission_classes=[permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser] 
-    @swagger_auto_schema(
-    operation_description="Update user profile information",
-    request_body=UserProfileUpdateSerializer,
-    consumes=["multipart/form-data"],  # This line is important!
-    responses={
-        200: openapi.Response(
-            description="User profile updated successfully",
-            schema=UserProfileUpdateSerializer()
-        ),
-        400: openapi.Response(
-            description="Bad request",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'error': openapi.Schema(type=openapi.TYPE_STRING)
-                }
-            )
-        )
-    }
-)
 
-    def patch(self, request):
-        profile = request.user.userprofile
-        serializer = UserProfileUpdateSerializer(profile, data=request.data, partial=True,context={'request': request} )
+
+class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_serializer_class(self):
+        """
+        Use a different serializer for GET vs PATCH/PUT requests.
+        """
+        if self.request.method in ['GET']:
+            return UserProfileGetSerializer
+        return UserProfileUpdateSerializer
+
+    def get_object(self):
+        return self.request.user.userprofile
+
+    @swagger_auto_schema(
+        operation_description="Update user profile information",
+        request_body=UserProfileUpdateSerializer,
+        consumes=["multipart/form-data"],  # Important for file uploads
+        responses={
+            200: openapi.Response(
+                description="User profile updated successfully",
+                schema=UserProfileUpdateSerializer()
+            ),
+            400: openapi.Response(
+                description="Bad request",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING)
+                    }
+                )
+            )
+        }
+    )
+    def patch(self, request, *args, **kwargs):
+        profile = self.get_object()
+        serializer = UserProfileUpdateSerializer(
+            profile,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get_object(self):
-        return UserProfile.objects.get(user=self.request.user)
     
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

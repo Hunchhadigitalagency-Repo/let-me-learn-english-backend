@@ -10,6 +10,7 @@ import random
 import string
 from PIL import Image
 
+from user.serializers.school_serializers import SchoolBasicSerializer
 from utils.urlsfixer import build_https_url
 from user.models import UserProfile, School
 from school.models import Subscription                                          # updated
@@ -99,6 +100,31 @@ class UserSerializer(serializers.ModelSerializer):
 # ─────────────────────────────────────────
 # Profile Update
 # ─────────────────────────────────────────
+
+class UserProfileGetSerializer(serializers.ModelSerializer):
+    school = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'bio', 'profile_picture', 'display_name', 'phone_number',
+            'address', 'user_type', 'is_verified', 'is_disabled', 'is_deleted',
+            'google_id', 'google_avatar', 'is_active', 'grade', 'section',
+            'dateofbirth', 'student_parent_name', 'student_parent_email',
+            'student_parent_phone_number',
+            'school'
+        ]
+
+    def get_school(self, obj):
+        if obj.user_type == 'school':
+            try:
+                # assuming a OneToOneField from School to User
+                school = obj.user.school
+                return SchoolBasicSerializer(school).data
+            except School.DoesNotExist:
+                return None
+        return None
+    
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     email = serializers.SerializerMethodField(read_only=True)
