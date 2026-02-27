@@ -124,6 +124,8 @@ class School(models.Model):
     address = models.TextField(blank=True, null=True)
     code=models.CharField(blank=True,null=True,unique=True)
     logo=models.FileField(upload_to='schoollogo/',null=True,blank=True)
+    is_deleted=models.BooleanField(default=False)
+    is_disabled=models.BooleanField(default=False)
     
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now_add=True)

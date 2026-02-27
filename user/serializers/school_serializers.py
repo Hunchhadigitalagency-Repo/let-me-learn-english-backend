@@ -63,7 +63,7 @@ class SchoolCreateSerializer(serializers.ModelSerializer):
             'country_id', 'province_id', 'district_id',
             'country', 'province', 'district', 'code',
             'focal_name', 'focal_email', 'focal_phone', 'focal_designation',
-            'focal_person',
+            'focal_person', "is_deleted", "is_disabled",
         ]
         extra_kwargs = {'logo': {'write_only': True}}
 
@@ -132,7 +132,7 @@ class SchoolUpdateSerializer(serializers.ModelSerializer):
             'name', 'establish_date', 'landline', 'email',
             'country', 'province', 'district', 'city', 'address',
             'logo', 'logo_url',
-            'focal_name', 'focal_email', 'focal_phone', 'focal_designation',
+            'focal_name', 'focal_email', 'focal_phone', 'focal_designation',"is_deleted", "is_disabled",
         ]
         extra_kwargs = {'logo': {'write_only': True}}
 
@@ -179,7 +179,7 @@ class SchoolBasicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = School
-        fields = ['id', 'name', 'email', 'city', 'address', 'logo', 'country', 'district', 'province']
+        fields = ['id', 'name', 'email', 'city', 'address', 'logo', 'country', 'district', 'province', "is_deleted", "is_disabled"]
 
     def get_logo(self, obj):
         request = self.context.get('request')
@@ -213,26 +213,23 @@ def resolve_subscription_status(subscription):
 
     now = timezone.now().date()  # Subscription uses DateField
 
-    if subscription.status == "deactivated":
-        return "deactivated"
-
-    if subscription.status == "inactive":
-        return "inactive"
+    if subscription.status == "deactivate":
+        return "deactivate"
 
     if subscription.on_trial:
         return "on_trial"
+
+    if subscription.status == "pending":
+        return "pending"
+    
+    if subscription.status == "active":
+        return "active"
 
     if subscription.end_date and subscription.end_date < now:
         return "expired"
 
     if subscription.end_date and now <= subscription.end_date <= now + timedelta(days=7):
         return "expiring_soon"
-
-    if subscription.status == "pending":
-        return "pending"
-
-    if subscription.status == "paid":
-        return "active"
 
     return "inactive"
 
@@ -260,9 +257,9 @@ class SchoolGetSerializer(serializers.ModelSerializer):
             "country", "province", "district", "city", "address",
             "logo_url", "created_at", "updated_at",
             "focal_person",
-            "student_count", "parent_count", "relation_count",
+            "student_count", "parent_count", "relation_count", "is_deleted", "is_disabled",
             "subscription_status",
-            "subscription",          # replaces "subscriptions" list
+            "subscription",         
         )
 
     def _get_subscription(self, obj):
