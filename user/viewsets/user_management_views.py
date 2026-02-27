@@ -92,8 +92,12 @@ class UserViewSet(viewsets.ViewSet):
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        qs = User.objects.all().select_related("userprofile").order_by("id")
-
+        qs = (
+            User.objects
+            .select_related("userprofile")
+            .filter(userprofile__user_type="admin")
+            .order_by("id")
+        )
         qp = self.request.query_params
 
         is_active = qp.get("is_active")
