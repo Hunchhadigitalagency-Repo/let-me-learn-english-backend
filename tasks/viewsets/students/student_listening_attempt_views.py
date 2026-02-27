@@ -339,7 +339,7 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
             return base
 
         # include detailed activity info
-        activity = attempt.speaking_activity
+        activity = attempt.listening_activity
         activity_detail = {
             "id": getattr(activity, "id", None),
             "title": getattr(activity, "title", None),
