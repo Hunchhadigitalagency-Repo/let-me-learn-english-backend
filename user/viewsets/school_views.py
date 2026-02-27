@@ -33,6 +33,42 @@ from utils.paginator import CustomPageNumberPagination
 # Google Login
 # ─────────────────────────────────────────
 
+def _validate_school_status(self):
+    profile = getattr(self.request.user, "userprofile", None)
+    if not profile:
+        return Response(
+            {"detail": "User profile not found."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Admin & Superadmin bypass school status checks
+    if profile.user_type in ["admin", "superadmin"]:
+        return None
+
+    # For school or any other user_type
+    school = School.objects.filter(user=self.request.user).first()
+
+    if not school:
+        return Response(
+            {"detail": "School not found for this user."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if school.is_deleted:
+        return Response(
+            {"detail": "Your school account has been deleted."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    if school.is_disabled:
+        return Response(
+            {"detail": "Your school account has been disabled."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    return None
+
+
 class SchoolGoogleLoginView(APIView):
     def post(self, request):
         access_token = request.data.get("access_token")
@@ -127,8 +163,8 @@ class SchoolViewSet(viewsets.ModelViewSet):
             "current_page": openapi.Schema(type=openapi.TYPE_INTEGER),
             "results": openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_OBJECT)),
         },
-        required=["links", "count", "page_size", "total_pages", "current_page", "results"],
-    )
+        required=["links", "count", "page_size", "total_pages", "current_page", "results"],)
+    
 
     # ---- Queryset ----
     def get_queryset(self):
@@ -301,6 +337,11 @@ class SchoolViewSet(viewsets.ModelViewSet):
         tags=["School"],
     )
     def list(self, request, *args, **kwargs):
+        
+        error = _validate_school_status(self)
+        if error:
+            return error
+
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
         data = self.get_serializer(
@@ -320,6 +361,10 @@ class SchoolViewSet(viewsets.ModelViewSet):
         tags=["School"],
     )
     def retrieve(self, request, *args, **kwargs):
+        error = _validate_school_status(self)
+        if error:
+            return error
+
         school = get_object_or_404(self.get_queryset(), pk=kwargs.get("pk"))
         return Response(SchoolGetSerializer(school, context={"request": request}).data)
 
@@ -343,6 +388,7 @@ class SchoolDropdownViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = School.objects.all().order_by("-id")
     serializer_class = SchoolDropdownSerializer
 
+
     @swagger_auto_schema(
         operation_summary="School dropdown",
         operation_description="Returns id and name only for dropdown selection.",
@@ -350,4 +396,7 @@ class SchoolDropdownViewSet(viewsets.ReadOnlyModelViewSet):
         tags=["School"],
     )
     def list(self, request, *args, **kwargs):
+        error = _validate_school_status(self)
+        if error:
+            return error
         return super().list(request, *args, **kwargs)
