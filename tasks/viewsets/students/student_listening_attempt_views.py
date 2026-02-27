@@ -307,60 +307,59 @@ class StudentListeningAttemptViewSet(viewsets.ViewSet):
     )
     @action(detail=True, methods=['get'])
     def result(self, request, pk=None):
-        # fetch the attempt
+
         attempt = StudentListeningAttempt.objects.filter(
             id=pk,
             student=request.user
-        ).select_related("listening_activity").prefetch_related("answers__question").first()
+        ).select_related(
+            "listening_activity"
+        ).prefetch_related(
+            "answers__question__listening_activity_part"
+        ).first()
 
         if not attempt:
             return Response({"error": "Attempt not found"}, status=404)
 
         answers = attempt.answers.all()
 
-        # calculate duration
+        # Calculate duration
         duration = None
         if attempt.completed_at:
-            duration_delta = attempt.completed_at - attempt.started_at
-            duration = int(duration_delta.total_seconds())
+            duration = int(
+                (attempt.completed_at - attempt.started_at).total_seconds()
+            )
 
-        # format questions
-        def question_details(q):
-            qtype = getattr(q, "type", None)
-            base = {
-                "id": q.id,
-                "type": qtype,
-                "instruction": getattr(q, "instruction", None),
-            }
-            if qtype in ["part1", "extended_question"]:
-                if getattr(q, "attachment", None):
-                    base["attachment"] = request.build_absolute_uri(q.attachment.url)
-                base["text_question"] = getattr(q, "text_question", None)
-            return base
-
-        # include detailed activity info
         activity = attempt.listening_activity
+
         activity_detail = {
-            "id": getattr(activity, "id", None),
-            "title": getattr(activity, "title", None),
-            "duration": getattr(activity, "duration", None),
-            "instruction": getattr(activity, "instruction", None),
-            "use_default_instruction": getattr(activity, "use_default_instruction", None)
+            "id": activity.id,
+            "title": activity.title,
+            "duration": activity.duration,
+            "instruction": activity.instruction,
+            "audio_file": request.build_absolute_uri(activity.audio_file.url)
+            if activity.audio_file else None
         }
 
         return Response({
             "attempt_id": attempt.id,
             "activity": activity.title,
             "activity_detail": activity_detail,
-            "total_questions": answers.count(),
+            "total_questions": attempt.total_questions,
+            "correct_answers": attempt.correct_answers,
             "score": attempt.score,
             "is_completed": attempt.is_completed,
             "duration_seconds": duration,
             "answers": [
                 {
-                    "question": question_details(answer.question),
-                    "audio_file": request.build_absolute_uri(answer.audio_file.url),
-                    "transcript": answer.transcript
+                    "question_id": answer.question.id,
+                    "question": answer.question.question,
+                    "question_type": answer.question.question_type,
+                    "selected_answer": answer.selected_answer,
+                    "is_correct": answer.is_correct,
+                    "part": answer.question.listening_activity_part.part,
+                    "part_audio": request.build_absolute_uri(
+                        answer.question.listening_activity_part.audio_file.url
+                    ) if answer.question.listening_activity_part.audio_file else None,
                 }
                 for answer in answers
             ]
