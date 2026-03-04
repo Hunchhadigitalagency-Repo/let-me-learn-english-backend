@@ -33,6 +33,7 @@ class ExpandVocabViewSet(ModelViewSet):
         'used_status',
         'forced_publish',
         'grade',
+        'published_date',
         'created_at',
         'updated_at'
     ]
