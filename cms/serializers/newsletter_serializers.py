@@ -16,7 +16,8 @@ class NewsletterCreateSerializer(serializers.ModelSerializer):
             'subject_header',
             'message',
             'users',
-            'is_active'
+            'is_active',
+            "save_as_template"
         ]
         extra_kwargs = {
             'users': {'required': False}

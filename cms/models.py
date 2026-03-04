@@ -69,6 +69,11 @@ class Newsletters(models.Model):
     message = models.TextField(blank=True, null=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='notification_templates', blank=True)
     is_active = models.BooleanField(default=True)
+    save_as_template = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.subject_header
   
 
 
