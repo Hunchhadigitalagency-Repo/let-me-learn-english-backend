@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import (
 # =========================
 # ViewSets
 # =========================
+from user.viewsets.create_user_spec_org_views import CreateOrganizationUserAPIView
 from user.viewsets.user_management_views import UserDropdownAPIView, UserViewSet
 from user.viewsets.address_views import (
     CountryViewSet,
@@ -115,6 +116,13 @@ urlpatterns = [
     path('roles/create/', RolePermissionViewSet.as_view({'post': 'create_role_and_permission'}), name='create-role'),
     path('roles/<int:pk>/update/', RolePermissionViewSet.as_view({'patch': 'update_role_and_permission'}), name='update-role'),
     path('roles/<int:pk>/delete/', RolePermissionViewSet.as_view({'delete': 'delete_role'}), name='delete-role'),
+
+    path(
+        "users/create/",
+        CreateOrganizationUserAPIView.as_view(),
+        name="create-organization-user"
+    ),
+
 
 
     # -------- AllAuth --------
