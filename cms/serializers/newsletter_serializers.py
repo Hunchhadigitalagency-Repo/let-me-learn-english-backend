@@ -34,6 +34,7 @@ class NewsletterListSerializer(serializers.ModelSerializer):
             'subject_header',
             'message',
             'users',
-            'is_active'
+            'is_active',
+             "save_as_template"
         ]
         read_only_fields = ['id']
