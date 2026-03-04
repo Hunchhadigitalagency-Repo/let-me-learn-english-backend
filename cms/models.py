@@ -118,9 +118,13 @@ class ExpandVocab(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        # If used_status is True and published_date is not set
-        if self.used_status and not self.published_date:
-            self.published_date = timezone.now()
+        if self.pk:
+            old = ExpandVocab.objects.get(pk=self.pk)
+            if not old.used_status and self.used_status:
+                self.published_date = timezone.now()
+        else:
+            if self.used_status:
+                self.published_date = timezone.now()
 
         super().save(*args, **kwargs)
 
