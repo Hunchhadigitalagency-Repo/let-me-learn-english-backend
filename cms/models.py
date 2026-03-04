@@ -2,6 +2,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 from django.conf import settings
+from django.utils import timezone
+
 # Create your models here.
 class BlogCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="Name of the blog category")
@@ -110,9 +112,18 @@ class ExpandVocab(models.Model):
     is_active=models.BooleanField(default=True)
     used_status=models.BooleanField(default=False)
     forced_publish = models.BooleanField(default=False)
+    published_date = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # If used_status is True and published_date is not set
+        if self.used_status and not self.published_date:
+            self.published_date = timezone.now()
+
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.word
